@@ -203,19 +203,6 @@ export default function Home() {
         <div className="mt-12 text-center text-gray-600">
           <p className="mb-2">✨ Direct Instruction methodology</p>
           <p className="text-sm">85% mastery required to advance</p>
-          
-          {/* Reset progress */}
-          <button
-            onClick={() => {
-              if (confirm('Clear all progress and start over?')) {
-                localStorage.removeItem('acquisition_progress');
-                window.location.reload();
-              }
-            }}
-            className="mt-4 text-xs text-gray-400 hover:text-gray-600 underline"
-          >
-            Reset Progress
-          </button>
         </div>
       </div>
     </div>

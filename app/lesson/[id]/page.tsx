@@ -104,8 +104,13 @@ export default function LessonPage() {
     if (passed && typeof window !== 'undefined') {
       try {
         const { submitLessonResult } = await import('@/lib/timeback/submitResult');
+        const { getCurrentUserServer } = await import('@/lib/lti/getUserServer');
         
-        await submitLessonResult('demo-student', {  // TODO: Get real student ID from auth
+        // Get student ID from session (LTI launch)
+        const user = await getCurrentUserServer();
+        const studentId = user?.userId || 'demo-student';
+        
+        await submitLessonResult(studentId, {
           lessonId,
           score,
           passed,

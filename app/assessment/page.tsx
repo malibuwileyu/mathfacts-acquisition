@@ -99,8 +99,13 @@ export default function ComprehensiveAssessment() {
   const submitToTimeBack = async (score: number) => {
     try {
       const { submitLessonResult } = await import('@/lib/timeback/submitResult');
+      const { getCurrentUserServer } = await import('@/lib/lti/getUserServer');
       
-      await submitLessonResult('demo-student', {
+      // Get student ID from session (LTI launch)
+      const user = await getCurrentUserServer();
+      const studentId = user?.userId || 'demo-student';
+      
+      await submitLessonResult(studentId, {
         lessonId: 999,  // Special ID for comprehensive assessment
         score,
         passed: score >= 85,

@@ -10,9 +10,12 @@
     "generate-audio": "tsx scripts/generate-audio.ts",
     "generate-ff-audio": "tsx scripts/generate-fact-family-intro.ts",
     "generate-rules": "tsx scripts/generate-rules.ts",
-    "setup-timeback": "tsx scripts/setup-timeback.ts"
+    "setup-timeback": "tsx scripts/setup-timeback.ts",
+    "create-test-student": "tsx scripts/create-test-student.ts"
   },
   "dependencies": {
+    "aws-jwt-verify": "^4.0.1",
+    "jose": "^5.9.6",
     "next": "16.0.3",
     "react": "19.2.0",
     "react-dom": "19.2.0"
