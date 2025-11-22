@@ -7,10 +7,11 @@ import { useState, useEffect } from 'react';
 
 export default function Home() {
   const router = useRouter();
-  const [progress, setProgress] = useState<any>(null);
-  
+  const [progress, setProgress] = useState<ReturnType<typeof getProgress> | null>(null);
+
   useEffect(() => {
-    setProgress(getProgress());
+    const loadedProgress = getProgress();
+    setProgress(loadedProgress);
   }, []);
 
   return (
@@ -27,7 +28,7 @@ export default function Home() {
           
           {/* Progress bar */}
           {progress && (() => {
-            const completed = Object.values(progress.lessons).filter((l: any) => l.completed && l.passed).length;
+            const completed = Object.values(progress.lessons).filter((l) => l.completed && l.passed).length;
             const percent = Math.round((completed / 26) * 100);
             
             return (
@@ -56,8 +57,8 @@ export default function Home() {
         </div>
 
         {/* Comprehensive Assessment (if all 26 complete) */}
-        {progress && (() => {
-          const completedCount = Object.values(progress.lessons).filter((l: any) => l.completed && l.passed).length;
+          {progress && (() => {
+            const completedCount = Object.values(progress.lessons).filter((l) => l.completed && l.passed).length;
           
           if (completedCount === 26) {
             return (
@@ -72,7 +73,7 @@ export default function Home() {
                       Ready for Final Assessment!
                     </h2>
                     <p className="text-xl text-white mb-6">
-                      You've completed all 26 lessons. Take the comprehensive test!
+                      You&apos;ve completed all 26 lessons. Take the comprehensive test!
                     </p>
                     <div className="bg-white text-orange-600 font-bold text-xl py-4 px-8 rounded-xl inline-block">
                       Start Assessment →
@@ -89,7 +90,7 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           {(() => {
             // Determine which pair to show (1-2, 3-4, 5-6, etc.)
-            const completedCount = progress ? Object.values(progress.lessons).filter((l: any) => l.completed && l.passed).length : 0;
+            const completedCount = progress ? Object.values(progress.lessons).filter((l) => l.completed && l.passed).length : 0;
             const currentPairStart = Math.floor(completedCount / 2) * 2 + 1;  // 1, 3, 5, 7...
             const visibleLessons = [currentPairStart, currentPairStart + 1].filter(id => id <= 26);
             

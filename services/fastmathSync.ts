@@ -8,7 +8,7 @@
  */
 
 import { INTEGRATION_CONFIG, mapFactId, getTrackId } from '@/config/integration';
-import { Lesson } from '@/types';
+import { Lesson, Operation } from '@/types';
 import { getFactsForSync } from '@/lib/progressStore';
 
 interface SyncResult {
@@ -23,7 +23,7 @@ interface SyncResult {
  */
 export async function syncToFastmath(
   userId: string,
-  operation: 'ADDITION' | 'SUBTRACTION' | 'MULTIPLICATION' | 'DIVISION'
+  operation: Operation
 ): Promise<SyncResult> {
   
   if (!INTEGRATION_CONFIG.ENABLED) {

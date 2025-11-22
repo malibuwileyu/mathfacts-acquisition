@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAudio } from '@/lib/useAudio';
 
 interface Props {

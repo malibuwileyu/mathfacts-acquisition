@@ -58,7 +58,7 @@ export default function FFShortIntro({ onComplete }: Props) {
                 onClick={onComplete}
                 className="w-full bg-green-500 hover:bg-green-600 text-white text-xl font-bold py-4 rounded-xl transition shadow-lg"
               >
-                Let's Go →
+                Let&apos;s Go →
               </button>
             )}
           </div>
