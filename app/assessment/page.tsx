@@ -98,21 +98,23 @@ export default function ComprehensiveAssessment() {
 
   const submitToTimeBack = async (score: number) => {
     try {
-      const { submitLessonResult } = await import('@/lib/timeback/submitResult');
-      const { getCurrentUserServer } = await import('@/lib/lti/getUserServer');
-      
-      // Get student ID from session (LTI launch)
-      const user = await getCurrentUserServer();
-      const studentId = user?.userId || 'demo-student';
-      
-      await submitLessonResult(studentId, {
-        lessonId: 999,  // Special ID for comprehensive assessment
-        score,
-        passed: score >= 85,
-        completedAt: new Date().toISOString()
+      // Call server action to submit (handles session server-side)
+      const response = await fetch('/api/submit-result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lessonId: 999,
+          score,
+          passed: score >= 85,
+          completedAt: new Date().toISOString()
+        })
       });
       
-      console.log('✅ Comprehensive assessment submitted to TimeBack');
+      if (response.ok) {
+        console.log('✅ Comprehensive assessment submitted to TimeBack');
+      } else {
+        throw new Error('Failed to submit');
+      }
     } catch (error) {
       console.error('❌ Failed to submit to TimeBack:', error);
     }

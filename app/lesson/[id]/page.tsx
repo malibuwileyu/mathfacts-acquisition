@@ -103,18 +103,15 @@ export default function LessonPage() {
     // Submit to TimeBack if passed
     if (passed && typeof window !== 'undefined') {
       try {
-        const { submitLessonResult } = await import('@/lib/timeback/submitResult');
-        const { getCurrentUserServer } = await import('@/lib/lti/getUserServer');
-        
-        // Get student ID from session (LTI launch)
-        const user = await getCurrentUserServer();
-        const studentId = user?.userId || 'demo-student';
-        
-        await submitLessonResult(studentId, {
-          lessonId,
-          score,
-          passed,
-          completedAt: new Date().toISOString()
+        await fetch('/api/submit-result', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            lessonId,
+            score,
+            passed,
+            completedAt: new Date().toISOString()
+          })
         });
       } catch (error) {
         console.error('Failed to submit to TimeBack:', error);
