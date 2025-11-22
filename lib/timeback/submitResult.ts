@@ -24,7 +24,8 @@ export async function submitLessonResult(
     const token = await getTimebackToken();
     
     // Get line item ID for this lesson
-    const lineItemId = lineItemMappings.mappings[resultData.lessonId.toString()];
+    const mappings = lineItemMappings.mappings as Record<string, string>;
+    const lineItemId = mappings[resultData.lessonId.toString()];
     
     if (!lineItemId) {
       throw new Error(`No LineItem found for Lesson ${resultData.lessonId}. Run setup script first.`);
