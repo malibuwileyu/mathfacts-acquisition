@@ -23,16 +23,18 @@ interface ReviewQuestion {
 /**
  * Generate review questions for a lesson
  * 
- * NEW LOGIC:
- * - Series Saying: 50% from current Series, 50% from previous Fact Families (turnarounds)
- * - Fact Families: 50% from current Families, 50% from previous Series Saying
- * - No duplicate questions (use Set by fact ID)
+ * NEW LOGIC FOR FACT FAMILIES (even lessons):
+ * - 50% from current lesson (turnarounds from this lesson)
+ * - 50% from previous Fact Family lessons (turnarounds from earlier)
+ * - Ensures at least 50% are turnaround questions
+ * - Weight 6,7,8,9 heavily
+ * - No duplicate questions
  * - Always 6-10 questions
  */
 export function generateReviewQuestions(currentLesson: Lesson): ReviewQuestion[] {
   const totalQuestions = Math.floor(Math.random() * 5) + 6;  // 6-10 questions
   const currentCount = Math.ceil(totalQuestions / 2);  // 50% from current
-  const oppositeCount = totalQuestions - currentCount;
+  const previousCount = totalQuestions - currentCount;
   
   const reviewQuestions: ReviewQuestion[] = [];
   const usedFactIds = new Set<string>();  // Prevent duplicates
@@ -47,11 +49,18 @@ export function generateReviewQuestions(currentLesson: Lesson): ReviewQuestion[]
     sourceLesson: currentLesson.id
   })));
   
-  // 2. Get facts from OPPOSITE format in previous lessons
-  const oppositeFacts = getOppositeFormatFacts(currentLesson);
-  const selectedOpposite = selectUniqueRandom(oppositeFacts, oppositeCount, usedFactIds);
+  // 2. For FACT FAMILIES: Get from previous Fact Family lessons (same format)
+  //    For SERIES SAYING: Get from opposite format
+  let previousFacts: Fact[];
+  if (currentLesson.format === 'fact_families') {
+    previousFacts = getSameFormatFacts(currentLesson);
+  } else {
+    previousFacts = getOppositeFormatFacts(currentLesson);
+  }
   
-  reviewQuestions.push(...selectedOpposite.map(fact => ({
+  const selectedPrevious = selectUniqueRandom(previousFacts, previousCount, usedFactIds);
+  
+  reviewQuestions.push(...selectedPrevious.map(fact => ({
     fact,
     isFromCurrentLesson: false,
     sourceLesson: fact.lessonId!
@@ -59,6 +68,29 @@ export function generateReviewQuestions(currentLesson: Lesson): ReviewQuestion[]
   
   // 3. Shuffle
   return shuffleArray(reviewQuestions);
+}
+
+/**
+ * Get facts from SAME format lessons (for Fact Families to pull previous turnarounds)
+ */
+function getSameFormatFacts(currentLesson: Lesson): Fact[] {
+  const previousLessons = lessons.filter(l => 
+    l.id < currentLesson.id && 
+    l.format === currentLesson.format
+  );
+  
+  if (previousLessons.length === 0) return [];
+  
+  const facts: Fact[] = [];
+  const maxPerLesson = 2;
+  
+  // Take max 2 facts from each previous lesson
+  previousLessons.forEach(lesson => {
+    const lessonFacts = lesson.facts.map(f => ({ ...f, lessonId: lesson.id }));
+    facts.push(...lessonFacts);
+  });
+  
+  return applyHighNumberWeighting(facts);
 }
 
 /**
