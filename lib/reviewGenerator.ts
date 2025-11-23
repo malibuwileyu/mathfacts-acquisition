@@ -54,16 +54,29 @@ export function generateReviewQuestions(currentLesson: Lesson): ReviewQuestion[]
         // Find the turnaround pair
         const pair = currentLesson.commutativePairs!.find(p => p[0] === fact.id || p[1] === fact.id);
         if (pair) {
-          const turnaroundId = pair[0] === fact.id ? pair[1] : pair[0];
-          const turnaroundFact = currentLesson.facts.find(f => f.id === turnaroundId);
+          // Show pair[0], ask for pair[1] (turnaround)
+          const baseFact = currentLesson.facts.find(f => f.id === pair[0]);
           
-          reviewQuestions.push({
-            fact,  // The answer they need to give
-            isFromCurrentLesson: true,
-            sourceLesson: currentLesson.id,
-            askAsTurnaround: true,
-            turnaroundOf: turnaroundFact || fact
-          });
+          if (baseFact) {
+            // Create turnaround fact (swap operands)
+            const turnaroundFact: Fact = {
+              id: pair[1],
+              operation: baseFact.operation,
+              operand1: baseFact.operand2,
+              operand2: baseFact.operand1,
+              result: baseFact.result,
+              display: `${baseFact.operand2} + ${baseFact.operand1}`,
+              lessonId: currentLesson.id
+            };
+            
+            reviewQuestions.push({
+              fact: turnaroundFact,  // What they enter
+              isFromCurrentLesson: true,
+              sourceLesson: currentLesson.id,
+              askAsTurnaround: true,
+              turnaroundOf: baseFact  // What we show
+            });
+          }
         } else {
           reviewQuestions.push({
             fact,
@@ -106,22 +119,39 @@ export function generateReviewQuestions(currentLesson: Lesson): ReviewQuestion[]
         if (reviewQuestions.length >= totalQuestions) return;
         if (usedFactIds.has(pair[0]) && usedFactIds.has(pair[1])) return;
         
-        // Show first, ask for second (turnaround)
+        // Show pair[0], ask for pair[1] (the turnaround)
         const baseFact = prevLesson.facts.find(f => f.id === pair[0]);
-        const turnaroundFact = prevLesson.facts.find(f => f.id === pair[1]);
         
-        if (baseFact && turnaroundFact) {
-          reviewQuestions.push({
-            fact: turnaroundFact,  // Answer
-            isFromCurrentLesson: false,
-            sourceLesson: prevLesson.id,
-            askAsTurnaround: true,
-            turnaroundOf: baseFact  // What we show/ask
-          });
-          
-          usedFactIds.add(pair[0]);
-          usedFactIds.add(pair[1]);
-        }
+        if (!baseFact) return;
+        
+        // Create the turnaround fact (may not exist in facts array)
+        const turnaroundFact: Fact = {
+          id: pair[1],
+          operation: baseFact.operation,
+          operand1: baseFact.operand2,  // SWAP
+          operand2: baseFact.operand1,  // SWAP
+          result: baseFact.result,
+          display: `${baseFact.operand2} + ${baseFact.operand1}`,
+          lessonId: prevLesson.id
+        };
+        
+        console.log('Creating turnaround question:', {
+          showing: pair[0],
+          showingFact: `${baseFact.operand1}+${baseFact.operand2}=${baseFact.result}`,
+          expecting: pair[1],
+          expectingFact: `${turnaroundFact.operand1}+${turnaroundFact.operand2}=${turnaroundFact.result}`
+        });
+        
+        reviewQuestions.push({
+          fact: turnaroundFact,  // This is what they should enter
+          isFromCurrentLesson: false,
+          sourceLesson: prevLesson.id,
+          askAsTurnaround: true,
+          turnaroundOf: baseFact  // This is what we show
+        });
+        
+        usedFactIds.add(pair[0]);
+        usedFactIds.add(pair[1]);
       });
     });
   } else {
