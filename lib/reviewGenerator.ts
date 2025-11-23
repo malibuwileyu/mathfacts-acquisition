@@ -14,10 +14,12 @@
 import { Lesson, Fact } from '@/types';
 import { lessons } from './lessonData';
 
-interface ReviewQuestion {
+export interface ReviewQuestion {
   fact: Fact;
   isFromCurrentLesson: boolean;
   sourceLesson: number;
+  askAsTurnaround?: boolean;  // For Fact Families: ask "What's the turnaround?"
+  turnaroundOf?: Fact;  // The base fact we're asking the turnaround of
 }
 
 /**
@@ -43,28 +45,96 @@ export function generateReviewQuestions(currentLesson: Lesson): ReviewQuestion[]
   const currentFacts = currentLesson.facts.map(f => ({ ...f, lessonId: currentLesson.id }));
   const selectedCurrent = selectUniqueRandom(currentFacts, currentCount, usedFactIds);
   
-  reviewQuestions.push(...selectedCurrent.map(fact => ({
-    fact,
-    isFromCurrentLesson: true,
-    sourceLesson: currentLesson.id
-  })));
+  // For Fact Families: Make 50% of current questions be turnarounds
+  if (currentLesson.format === 'fact_families' && currentLesson.commutativePairs) {
+    selectedCurrent.forEach((fact, idx) => {
+      const askAsTurnaround = idx % 2 === 0;  // Every other one is turnaround
+      
+      if (askAsTurnaround) {
+        // Find the turnaround pair
+        const pair = currentLesson.commutativePairs!.find(p => p[0] === fact.id || p[1] === fact.id);
+        if (pair) {
+          const turnaroundId = pair[0] === fact.id ? pair[1] : pair[0];
+          const turnaroundFact = currentLesson.facts.find(f => f.id === turnaroundId);
+          
+          reviewQuestions.push({
+            fact,  // The answer they need to give
+            isFromCurrentLesson: true,
+            sourceLesson: currentLesson.id,
+            askAsTurnaround: true,
+            turnaroundOf: turnaroundFact || fact
+          });
+        } else {
+          reviewQuestions.push({
+            fact,
+            isFromCurrentLesson: true,
+            sourceLesson: currentLesson.id
+          });
+        }
+      } else {
+        reviewQuestions.push({
+          fact,
+          isFromCurrentLesson: true,
+          sourceLesson: currentLesson.id
+        });
+      }
+    });
+  } else {
+    reviewQuestions.push(...selectedCurrent.map(fact => ({
+      fact,
+      isFromCurrentLesson: true,
+      sourceLesson: currentLesson.id
+    })));
+  }
   
   // 2. For FACT FAMILIES: Get from previous Fact Family lessons (same format)
   //    For SERIES SAYING: Get from opposite format
-  let previousFacts: Fact[];
   if (currentLesson.format === 'fact_families') {
-    previousFacts = getSameFormatFacts(currentLesson);
+    const previousFamilyLessons = lessons.filter(l => 
+      l.id < currentLesson.id && 
+      l.format === 'fact_families'
+    );
+    
+    // Get turnaround questions from previous lessons
+    previousFamilyLessons.forEach(prevLesson => {
+      if (!prevLesson.commutativePairs) return;
+      
+      // Add max 2 turnaround questions per previous lesson
+      const pairsToUse = prevLesson.commutativePairs.slice(0, 2);
+      
+      pairsToUse.forEach(pair => {
+        if (reviewQuestions.length >= totalQuestions) return;
+        if (usedFactIds.has(pair[0]) && usedFactIds.has(pair[1])) return;
+        
+        // Show first, ask for second (turnaround)
+        const baseFact = prevLesson.facts.find(f => f.id === pair[0]);
+        const turnaroundFact = prevLesson.facts.find(f => f.id === pair[1]);
+        
+        if (baseFact && turnaroundFact) {
+          reviewQuestions.push({
+            fact: turnaroundFact,  // Answer
+            isFromCurrentLesson: false,
+            sourceLesson: prevLesson.id,
+            askAsTurnaround: true,
+            turnaroundOf: baseFact  // What we show/ask
+          });
+          
+          usedFactIds.add(pair[0]);
+          usedFactIds.add(pair[1]);
+        }
+      });
+    });
   } else {
-    previousFacts = getOppositeFormatFacts(currentLesson);
+    // Series Saying: pull from previous Fact Families (opposite format)
+    const previousFacts = getOppositeFormatFacts(currentLesson);
+    const selectedPrevious = selectUniqueRandom(previousFacts, previousCount, usedFactIds);
+    
+    reviewQuestions.push(...selectedPrevious.map(fact => ({
+      fact,
+      isFromCurrentLesson: false,
+      sourceLesson: fact.lessonId!
+    })));
   }
-  
-  const selectedPrevious = selectUniqueRandom(previousFacts, previousCount, usedFactIds);
-  
-  reviewQuestions.push(...selectedPrevious.map(fact => ({
-    fact,
-    isFromCurrentLesson: false,
-    sourceLesson: fact.lessonId!
-  })));
   
   // 3. Shuffle
   return shuffleArray(reviewQuestions);

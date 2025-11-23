@@ -16,7 +16,7 @@ import { useState, useEffect } from 'react';
 import { useAudio, getFactAudio } from '@/lib/useAudio';
 import NumberPad from '@/components/shared/NumberPad';
 import { updateFactProgress } from '@/lib/progressStore';
-import { generateReviewQuestions } from '@/lib/reviewGenerator';
+import { generateReviewQuestions, ReviewQuestion } from '@/lib/reviewGenerator';
 
 interface Props {
   lesson: Lesson;
@@ -37,8 +37,19 @@ export default function ReviewStep({ lesson, onComplete }: Props) {
   const currentFact = currentQuestion.fact;
 
   useEffect(() => {
-    playAudio(getFactAudio(currentFact.id, 'question'));
-  }, [currentQuestionIndex]);
+    const playQuestionAudio = async () => {
+      if (currentQuestion.askAsTurnaround && currentQuestion.turnaroundOf) {
+        // Play base fact, then ask for turnaround
+        await playAudio(getFactAudio(currentQuestion.turnaroundOf.id, 'statement'));
+        await playAudio({ filename: 'instructions/whats-turnaround.mp3', text: "What's its turnaround?" });
+      } else {
+        // Normal question
+        playAudio(getFactAudio(currentFact.id, 'question'));
+      }
+    };
+    
+    playQuestionAudio();
+  }, [currentQuestionIndex, currentQuestion, currentFact.id, playAudio]);
 
   const handleSubmit = () => {
     const userAnswer = parseInt(answer);
@@ -90,9 +101,25 @@ export default function ReviewStep({ lesson, onComplete }: Props) {
             <div className="text-sm text-gray-600 mb-1">
               Question {currentQuestionIndex + 1} of {questions.length}
             </div>
-            <div className="text-5xl font-bold text-orange-600">
-              {currentFact.operand1} + {currentFact.operand2} = ?
-            </div>
+            
+            {currentQuestion.askAsTurnaround && currentQuestion.turnaroundOf ? (
+              <>
+                <div className="text-3xl font-bold text-orange-600 mb-2">
+                  {currentQuestion.turnaroundOf.operand1} + {currentQuestion.turnaroundOf.operand2} = {currentQuestion.turnaroundOf.result}
+                </div>
+                <div className="text-2xl text-gray-600 mb-2">
+                  What&apos;s its turnaround?
+                </div>
+                <div className="text-5xl font-bold text-orange-600">
+                  ? + ? = ?
+                </div>
+              </>
+            ) : (
+              <div className="text-5xl font-bold text-orange-600">
+                {currentFact.operand1} + {currentFact.operand2} = ?
+              </div>
+            )}
+            
             {answer && (
               <div className="text-4xl font-bold text-gray-800 mt-2">
                 {answer}
