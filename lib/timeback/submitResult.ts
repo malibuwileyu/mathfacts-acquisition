@@ -5,7 +5,7 @@
 import { getTimebackToken } from './auth';
 import lineItemMappings from './lineItemMappings.json';
 
-const ONEROSTER_BASE = process.env.NEXT_PUBLIC_TIMEBACK_ONEROSTER_BASE_URL!;
+const ONEROSTER_BASE = process.env.TIMEBACK_ONEROSTER_BASE_URL!;
 
 export interface LessonResultData {
   lessonId: number;
