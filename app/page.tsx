@@ -9,15 +9,25 @@ import { authClient } from '@/lib/auth-client';
 export default function Home() {
   const router = useRouter();
   const [progress, setProgress] = useState<ReturnType<typeof getProgress> | null>(null);
+  const [demoMode, setDemoMode] = useState(false);
+  const [devMode, setDevMode] = useState(false);
   const { data: session, isPending } = authClient.useSession();
 
   useEffect(() => {
     const loadedProgress = getProgress();
     setProgress(loadedProgress);
+    
+    // Check for demo mode
+    const isDemoMode = localStorage.getItem('demo_mode') === 'true';
+    setDemoMode(isDemoMode);
+    
+    // Check for dev mode (type "devmode" to activate)
+    const checkDevMode = localStorage.getItem('dev_mode') === 'true';
+    setDevMode(checkDevMode);
   }, []);
 
-  // Show login if not authenticated
-  if (isPending) {
+  // Show login if not authenticated AND not in demo mode
+  if (isPending && !demoMode) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-blue-100">
         <div className="text-3xl text-gray-600">Loading...</div>
@@ -25,7 +35,7 @@ export default function Home() {
     );
   }
 
-  if (!session) {
+  if (!session && !demoMode) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-10 text-center">
@@ -37,12 +47,22 @@ export default function Home() {
           </p>
           <button
             onClick={() => authClient.signIn.social({ provider: "cognito" })}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white text-2xl font-bold py-5 px-6 rounded-xl transition shadow-lg"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white text-2xl font-bold py-5 px-6 rounded-xl transition shadow-lg mb-4"
           >
             Login with TimeBack
           </button>
-          <p className="text-sm text-gray-500 mt-4">
-            Use your TimeBack account to continue
+          <button
+            onClick={() => {
+              // Set demo mode flag
+              localStorage.setItem('demo_mode', 'true');
+              window.location.reload();
+            }}
+            className="w-full bg-gray-400 hover:bg-gray-500 text-white text-lg font-bold py-4 px-6 rounded-xl transition shadow-lg"
+          >
+            Continue as Guest (Demo)
+          </button>
+          <p className="text-xs text-gray-500 mt-4">
+            Guest mode for testing - progress won&apos;t be saved to TimeBack
           </p>
         </div>
       </div>
@@ -60,10 +80,17 @@ export default function Home() {
               Math Fact Acquisition
             </h1>
             <button
-              onClick={() => authClient.signOut()}
+              onClick={() => {
+                if (demoMode) {
+                  localStorage.removeItem('demo_mode');
+                  window.location.reload();
+                } else {
+                  authClient.signOut();
+                }
+              }}
               className="text-base text-gray-600 hover:text-gray-800 px-4 py-2 rounded-lg hover:bg-white/50 transition"
             >
-              Logout
+              {demoMode ? 'Exit Demo' : 'Logout'}
             </button>
           </div>
           <p className="text-2xl text-gray-700 mb-6">
@@ -100,11 +127,53 @@ export default function Home() {
           })()}
         </div>
 
-        {/* Comprehensive Assessment (if all 26 complete) */}
+        {/* Dev Controls */}
+        {devMode && (
+          <div className="max-w-3xl mx-auto mb-8">
+            <div className="bg-red-100 border-2 border-red-400 rounded-xl p-4">
+              <h3 className="text-lg font-bold text-red-700 mb-3">🔧 Dev Mode</h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('acquisition_progress');
+                    window.location.reload();
+                  }}
+                  className="bg-red-500 hover:bg-red-600 text-white text-sm font-bold py-2 px-4 rounded"
+                >
+                  Clear Progress
+                </button>
+                <button
+                  onClick={() => {
+                    const allComplete: any = {lessons: {}, facts: {}};
+                    for (let i = 1; i <= 26; i++) {
+                      allComplete.lessons[i] = {currentStep: i % 2 === 1 ? 6 : 7, completed: true, passed: true, quizScore: 90};
+                    }
+                    localStorage.setItem('acquisition_progress', JSON.stringify(allComplete));
+                    window.location.reload();
+                  }}
+                  className="bg-green-500 hover:bg-green-600 text-white text-sm font-bold py-2 px-4 rounded"
+                >
+                  Complete All 26
+                </button>
+                <button
+                  onClick={() => router.push('/assessment')}
+                  className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-2 px-4 rounded"
+                >
+                  Go to Assessment
+                </button>
+              </div>
+              <p className="text-xs text-red-600 mt-2">
+                To disable: localStorage.removeItem(&apos;dev_mode&apos;) and reload
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Comprehensive Assessment (if all 26 complete OR dev mode) */}
           {progress && (() => {
             const completedCount = Object.values(progress.lessons).filter((l) => l.completed && l.passed).length;
           
-          if (completedCount === 26) {
+          if (completedCount === 26 || devMode) {
             return (
               <div className="max-w-3xl mx-auto mb-8">
                 <div 
@@ -133,10 +202,16 @@ export default function Home() {
         {/* Lesson Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           {(() => {
-            // Determine which pair to show (1-2, 3-4, 5-6, etc.)
+            // In dev mode, show ALL lessons. Otherwise show current pair.
             const completedCount = progress ? Object.values(progress.lessons).filter((l) => l.completed && l.passed).length : 0;
-            const currentPairStart = Math.floor(completedCount / 2) * 2 + 1;  // 1, 3, 5, 7...
-            const visibleLessons = [currentPairStart, currentPairStart + 1].filter(id => id <= 26);
+            
+            let visibleLessons: number[];
+            if (devMode) {
+              visibleLessons = lessons.map(l => l.id);  // Show all in dev mode
+            } else {
+              const currentPairStart = Math.floor(completedCount / 2) * 2 + 1;  // 1, 3, 5, 7...
+              visibleLessons = [currentPairStart, currentPairStart + 1].filter(id => id <= 26);
+            }
             
             return [...lessons]
               .filter(l => visibleLessons.includes(l.id))
