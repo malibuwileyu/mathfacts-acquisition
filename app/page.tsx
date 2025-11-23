@@ -21,9 +21,8 @@ export default function Home() {
     const isDemoMode = localStorage.getItem('demo_mode') === 'true';
     setDemoMode(isDemoMode);
     
-    // Check for dev mode (type "devmode" to activate)
-    const checkDevMode = localStorage.getItem('dev_mode') === 'true';
-    setDevMode(checkDevMode);
+    // Demo mode automatically enables dev controls
+    setDevMode(isDemoMode);
   }, []);
 
   // Show login if not authenticated AND not in demo mode
@@ -127,20 +126,20 @@ export default function Home() {
           })()}
         </div>
 
-        {/* Dev Controls */}
-        {devMode && (
+        {/* Demo Controls */}
+        {demoMode && (
           <div className="max-w-3xl mx-auto mb-8">
-            <div className="bg-red-100 border-2 border-red-400 rounded-xl p-4">
-              <h3 className="text-lg font-bold text-red-700 mb-3">🔧 Dev Mode</h3>
+            <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-4">
+              <h3 className="text-lg font-bold text-blue-700 mb-3">👋 Demo Mode - Quick Navigation</h3>
               <div className="flex gap-2">
                 <button
                   onClick={() => {
                     localStorage.removeItem('acquisition_progress');
                     window.location.reload();
                   }}
-                  className="bg-red-500 hover:bg-red-600 text-white text-sm font-bold py-2 px-4 rounded"
+                  className="bg-gray-500 hover:bg-gray-600 text-white text-sm font-bold py-2 px-4 rounded"
                 >
-                  Clear Progress
+                  Start Fresh
                 </button>
                 <button
                   onClick={() => {
@@ -153,17 +152,11 @@ export default function Home() {
                   }}
                   className="bg-green-500 hover:bg-green-600 text-white text-sm font-bold py-2 px-4 rounded"
                 >
-                  Complete All 26
-                </button>
-                <button
-                  onClick={() => router.push('/assessment')}
-                  className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-2 px-4 rounded"
-                >
-                  Go to Assessment
+                  Skip to Final Assessment
                 </button>
               </div>
-              <p className="text-xs text-red-600 mt-2">
-                To disable: localStorage.removeItem(&apos;dev_mode&apos;) and reload
+              <p className="text-xs text-blue-600 mt-2">
+                All 26 lessons are visible below for easy testing
               </p>
             </div>
           </div>
