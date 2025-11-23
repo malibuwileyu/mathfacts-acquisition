@@ -4,24 +4,68 @@ import { useRouter } from 'next/navigation';
 import { lessons } from '@/lib/lessonData';
 import { getProgress } from '@/lib/progressStore';
 import { useState, useEffect } from 'react';
+import { authClient } from '@/lib/auth-client';
 
 export default function Home() {
   const router = useRouter();
   const [progress, setProgress] = useState<ReturnType<typeof getProgress> | null>(null);
+  const { data: session, isPending } = authClient.useSession();
 
   useEffect(() => {
     const loadedProgress = getProgress();
     setProgress(loadedProgress);
   }, []);
 
+  // Show login if not authenticated
+  if (isPending) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-blue-100">
+        <div className="text-3xl text-gray-600">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-10 text-center">
+          <h1 className="text-5xl font-bold text-blue-600 mb-4">
+            Math Facts Acquisition
+          </h1>
+          <p className="text-xl text-gray-700 mb-8">
+            26 lessons to master addition facts
+          </p>
+          <button
+            onClick={() => authClient.signIn.social({ provider: "cognito" })}
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white text-2xl font-bold py-5 px-6 rounded-xl transition shadow-lg"
+          >
+            Login with TimeBack
+          </button>
+          <p className="text-sm text-gray-500 mt-4">
+            Use your TimeBack account to continue
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-gradient-to-b from-blue-50 to-blue-100 min-h-screen">
       <div className="max-w-6xl mx-auto p-6 pb-12">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-6xl font-bold text-blue-600 mb-4">
-            Math Fact Acquisition
-          </h1>
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-24"></div>
+            <h1 className="text-6xl font-bold text-blue-600">
+              Math Fact Acquisition
+            </h1>
+            <button
+              onClick={() => authClient.signOut()}
+              className="text-base text-gray-600 hover:text-gray-800 px-4 py-2 rounded-lg hover:bg-white/50 transition"
+            >
+              Logout
+            </button>
+          </div>
           <p className="text-2xl text-gray-700 mb-6">
             Master your addition facts with Direct Instruction
           </p>

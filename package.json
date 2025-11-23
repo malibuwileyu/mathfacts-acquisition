@@ -11,12 +11,16 @@
     "generate-ff-audio": "tsx scripts/generate-fact-family-intro.ts",
     "generate-rules": "tsx scripts/generate-rules.ts",
     "setup-timeback": "tsx scripts/setup-timeback.ts",
-    "create-test-student": "tsx scripts/create-test-student.ts"
+    "create-test-student": "tsx scripts/create-test-student.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push"
   },
   "dependencies": {
-    "aws-jwt-verify": "^4.0.1",
-    "jose": "^5.9.6",
+    "better-auth": "^1.3.13",
+    "drizzle-orm": "^0.36.4",
     "next": "16.0.3",
+    "postgres": "^3.4.5",
     "react": "19.2.0",
     "react-dom": "19.2.0"
   },
@@ -26,6 +30,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^16.4.5",
+    "drizzle-kit": "^0.28.1",
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
     "tailwindcss": "^4",

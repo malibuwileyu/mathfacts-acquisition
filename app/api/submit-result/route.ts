@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentUserServer } from '@/lib/lti/getUserServer';
+import { getSession } from '@/lib/auth';
 import { submitLessonResult } from '@/lib/timeback/submitResult';
 
 export async function POST(request: NextRequest) {
@@ -12,9 +12,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { lessonId, score, passed, completedAt } = body;
     
-    // Get student ID from session
-    const user = await getCurrentUserServer();
-    const studentId = user?.userId || 'demo-student';
+    // Get student ID from better-auth session
+    const session = await getSession();
+    const studentId = session?.user?.id || 'demo-student';
     
     // Submit to TimeBack
     const result = await submitLessonResult(studentId, {
