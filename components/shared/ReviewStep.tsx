@@ -27,6 +27,8 @@ export default function ReviewStep({ lesson, onComplete }: Props) {
   const [questions] = useState(() => generateReviewQuestions(lesson));
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answer, setAnswer] = useState('');
+  const [answer1, setAnswer1] = useState('');  // For turnaround first operand
+  const [answer2, setAnswer2] = useState('');  // For turnaround second operand
   const [answers, setAnswers] = useState<boolean[]>([]);  // Track correct/incorrect
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
@@ -52,8 +54,19 @@ export default function ReviewStep({ lesson, onComplete }: Props) {
   }, [currentQuestionIndex, currentQuestion, currentFact.id, playAudio]);
 
   const handleSubmit = () => {
-    const userAnswer = parseInt(answer);
-    const correct = userAnswer === currentFact.result;
+    let correct: boolean;
+    
+    if (currentQuestion.askAsTurnaround) {
+      // Check turnaround: both operands must match
+      const userOp1 = parseInt(answer1);
+      const userOp2 = parseInt(answer2);
+      correct = userOp1 === currentFact.operand1 && userOp2 === currentFact.operand2;
+    } else {
+      // Check sum
+      const userAnswer = parseInt(answer);
+      correct = userAnswer === currentFact.result;
+    }
+    
     const timeSpent = Date.now() - questionStartTime;
     
     // Track progress
@@ -75,6 +88,8 @@ export default function ReviewStep({ lesson, onComplete }: Props) {
     setTimeout(() => {
       setShowFeedback(false);
       setAnswer('');
+      setAnswer1('');
+      setAnswer2('');
       setQuestionStartTime(Date.now());
       
       if (currentQuestionIndex < questions.length - 1) {
@@ -110,20 +125,38 @@ export default function ReviewStep({ lesson, onComplete }: Props) {
                 <div className="text-2xl text-gray-600 mb-2">
                   What&apos;s its turnaround?
                 </div>
-                <div className="text-5xl font-bold text-orange-600">
-                  ? + ? = ?
+                <div className="bg-gray-50 rounded-lg p-3 mb-2">
+                  <div className="flex items-center justify-center gap-2 text-4xl font-bold text-gray-900">
+                    <input
+                      type="text"
+                      value={answer1}
+                      readOnly
+                      className="w-16 h-16 text-center border-3 border-gray-400 rounded-lg text-3xl bg-white"
+                      placeholder="?"
+                    />
+                    <span className="text-gray-800">+</span>
+                    <input
+                      type="text"
+                      value={answer2}
+                      readOnly
+                      className="w-16 h-16 text-center border-3 border-gray-400 rounded-lg text-3xl bg-white"
+                      placeholder="?"
+                    />
+                    <span className="text-gray-800">= ?</span>
+                  </div>
                 </div>
               </>
             ) : (
-              <div className="text-5xl font-bold text-orange-600">
-                {currentFact.operand1} + {currentFact.operand2} = ?
-              </div>
-            )}
-            
-            {answer && (
-              <div className="text-4xl font-bold text-gray-800 mt-2">
-                {answer}
-              </div>
+              <>
+                <div className="text-5xl font-bold text-orange-600">
+                  {currentFact.operand1} + {currentFact.operand2} = ?
+                </div>
+                {answer && (
+                  <div className="text-4xl font-bold text-gray-800 mt-2">
+                    {answer}
+                  </div>
+                )}
+              </>
             )}
           </div>
 
@@ -137,15 +170,49 @@ export default function ReviewStep({ lesson, onComplete }: Props) {
           {/* Number pad */}
           {!showFeedback && (
             <>
-              <NumberPad value={answer} onChange={setAnswer} />
-              
-              <button
-                onClick={handleSubmit}
-                disabled={!answer}
-                className="w-full mt-3 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white text-xl font-bold py-4 rounded-xl transition shadow-lg"
-              >
-                Submit
-              </button>
+              {currentQuestion.askAsTurnaround ? (
+                <>
+                  <NumberPad 
+                    value=""
+                    onChange={(val) => {
+                      if (val === '') {
+                        setAnswer1('');
+                        setAnswer2('');
+                      } else {
+                        // Auto-fill first empty box
+                        if (!answer1) {
+                          setAnswer1(val);
+                        } else if (!answer2) {
+                          setAnswer2(val);
+                        } else {
+                          // Both full, replace second
+                          setAnswer2(val);
+                        }
+                      }
+                    }}
+                  />
+                  
+                  <button
+                    onClick={handleSubmit}
+                    disabled={!answer1 || !answer2}
+                    className="w-full mt-3 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white text-xl font-bold py-4 rounded-xl transition shadow-lg"
+                  >
+                    Submit
+                  </button>
+                </>
+              ) : (
+                <>
+                  <NumberPad value={answer} onChange={setAnswer} />
+                  
+                  <button
+                    onClick={handleSubmit}
+                    disabled={!answer}
+                    className="w-full mt-3 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white text-xl font-bold py-4 rounded-xl transition shadow-lg"
+                  >
+                    Submit
+                  </button>
+                </>
+              )}
             </>
           )}
         </div>
