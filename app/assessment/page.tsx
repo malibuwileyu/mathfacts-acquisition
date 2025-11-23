@@ -14,12 +14,21 @@ import { useAudio, getFactAudio } from '@/lib/useAudio';
 import NumberPad from '@/components/shared/NumberPad';
 import { Fact } from '@/types';
 
+interface AssessmentQuestion {
+  fact: Fact;
+  isTurnaround: boolean;
+  lessonId: number;
+  baseFact?: Fact;
+}
+
 export default function ComprehensiveAssessment() {
   const router = useRouter();
-  const [questions, setQuestions] = useState<Fact[]>([]);
+  const [questions, setQuestions] = useState<AssessmentQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answer, setAnswer] = useState('');
-  const [answers, setAnswers] = useState<boolean[]>([]);
+  const [answer1, setAnswer1] = useState('');
+  const [answer2, setAnswer2] = useState('');
+  const [answers, setAnswers] = useState<Array<{correct: boolean, lessonId: number}>>([]);
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
@@ -27,68 +36,141 @@ export default function ComprehensiveAssessment() {
   const { playAudio } = useAudio();
 
   useEffect(() => {
-    // Generate 26 questions (1 per lesson)
+    // Check all 26 lessons complete
     const progress = getProgress();
-    const completedLessons = lessons.filter(l => 
+    const completedCount = lessons.filter(l => 
       progress.lessons[l.id]?.completed && progress.lessons[l.id]?.passed
-    );
+    ).length;
 
-    if (completedLessons.length < 26) {
+    if (completedCount < 26) {
       router.push('/');
       return;
     }
 
-    // Generate weighted questions
-    const selectedQuestions: Fact[] = [];
+    // Section 1: 13 questions from ODD lessons (Series Saying) - regular sum questions
+    // Section 2: 13 questions from EVEN lessons (Fact Families) - turnaround questions
     
-    completedLessons.forEach(lesson => {
-      // Get facts from lesson, weight towards 6,7,8,9
+    const selectedQuestions: Array<{fact: Fact, isTurnaround: boolean, lessonId: number, baseFact?: Fact}> = [];
+    
+    // SECTION 1: Odd lessons (1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25)
+    const oddLessons = lessons.filter(l => l.id % 2 === 1);
+    oddLessons.forEach(lesson => {
+      // Weight towards 6,7,8,9
       const weightedFacts: Fact[] = [];
       lesson.facts.forEach(fact => {
         const hasHighNumber = fact.operand1 >= 6 || fact.operand2 >= 6;
         if (hasHighNumber) {
-          weightedFacts.push(fact, fact, fact);  // 3x weight
+          weightedFacts.push(fact, fact, fact);
         } else {
-          weightedFacts.push(fact);  // 1x weight
+          weightedFacts.push(fact);
         }
       });
       
-      // Random selection from weighted pool
       const randomFact = weightedFacts[Math.floor(Math.random() * weightedFacts.length)];
-      selectedQuestions.push(randomFact);
+      selectedQuestions.push({
+        fact: randomFact,
+        isTurnaround: false,
+        lessonId: lesson.id
+      });
+    });
+    
+    // SECTION 2: Even lessons (2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26) - as turnarounds
+    const evenLessons = lessons.filter(l => l.id % 2 === 0);
+    evenLessons.forEach(lesson => {
+      // Pick random fact from lesson
+      const weightedFacts: Fact[] = [];
+      lesson.facts.forEach(fact => {
+        const hasHighNumber = fact.operand1 >= 6 || fact.operand2 >= 6;
+        if (hasHighNumber) {
+          weightedFacts.push(fact, fact, fact);
+        } else {
+          weightedFacts.push(fact);
+        }
+      });
+      
+      const baseFact = weightedFacts[Math.floor(Math.random() * weightedFacts.length)];
+      
+      // Create turnaround (swap operands)
+      const turnaroundFact: Fact = {
+        id: `${baseFact.operand2}+${baseFact.operand1}`,
+        operation: baseFact.operation,
+        operand1: baseFact.operand2,
+        operand2: baseFact.operand1,
+        result: baseFact.result,
+        display: `${baseFact.operand2} + ${baseFact.operand1}`
+      };
+      
+      selectedQuestions.push({
+        fact: turnaroundFact,
+        isTurnaround: true,
+        lessonId: lesson.id,
+        baseFact
+      });
     });
 
-    setQuestions(selectedQuestions);
-  }, []);
+    setQuestions(selectedQuestions as any);
+  }, [router]);
 
   useEffect(() => {
     if (questions.length > 0 && currentIndex < questions.length) {
-      playAudio(getFactAudio(questions[currentIndex].id, 'question'));
+      const q = questions[currentIndex];
+      
+      if (q.isTurnaround && q.baseFact) {
+        // Play base fact, then ask for turnaround
+        const playTurnaroundQuestion = async () => {
+          await playAudio(getFactAudio(q.baseFact!.id, 'statement'));
+          await playAudio({ filename: 'instructions/whats-turnaround.mp3', text: "What's its turnaround?" });
+        };
+        playTurnaroundQuestion();
+      } else {
+        // Regular sum question
+        playAudio(getFactAudio(q.fact.id, 'question'));
+      }
     }
-  }, [currentIndex, questions]);
+  }, [currentIndex, questions, playAudio]);
 
   const handleSubmit = async () => {
-    const currentFact = questions[currentIndex];
-    const userAnswer = parseInt(answer);
-    const correct = userAnswer === currentFact.result;
+    const currentQ = questions[currentIndex];
+    const currentFact = currentQ.fact;
+    let correct: boolean;
+    
+    if (currentQ.isTurnaround) {
+      // Check turnaround: both operands must match
+      const userOp1 = parseInt(answer1);
+      const userOp2 = parseInt(answer2);
+      correct = userOp1 === currentFact.operand1 && userOp2 === currentFact.operand2;
+    } else {
+      // Check sum
+      const userAnswer = parseInt(answer);
+      correct = userAnswer === currentFact.result;
+    }
     
     setIsCorrect(correct);
     setShowFeedback(true);
 
-    const newAnswers = [...answers, correct];
+    const newAnswers = [...answers, { correct, lessonId: currentQ.lessonId }];
     setAnswers(newAnswers);
 
     setTimeout(() => {
       setShowFeedback(false);
       setAnswer('');
+      setAnswer1('');
+      setAnswer2('');
       
       if (currentIndex < questions.length - 1) {
         setCurrentIndex(currentIndex + 1);
       } else {
         // Assessment complete
-        const score = Math.round((newAnswers.filter(a => a).length / newAnswers.length) * 100);
+        const correctCount = newAnswers.filter(a => a.correct).length;
+        const score = Math.round((correctCount / newAnswers.length) * 100);
         setFinalScore(score);
         setIsComplete(true);
+        
+        // Log wrong answers by lesson
+        const wrongAnswers = newAnswers.filter(a => !a.correct);
+        if (wrongAnswers.length > 0) {
+          console.log('❌ Wrong answers from lessons:', wrongAnswers.map(a => a.lessonId).join(', '));
+        }
         
         // Submit to TimeBack
         submitToTimeBack(score);
@@ -153,7 +235,7 @@ export default function ComprehensiveAssessment() {
           </div>
 
           <div className="text-lg text-gray-600 mb-8">
-            Correct: {answers.filter(a => a).length} / {answers.length}
+            Correct: {answers.filter(a => a.correct).length} / {answers.length}
           </div>
 
           <button
@@ -167,7 +249,8 @@ export default function ComprehensiveAssessment() {
     );
   }
 
-  const currentFact = questions[currentIndex];
+  const currentQ = questions[currentIndex];
+  const currentFact = currentQ.fact;
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-b from-blue-50 to-blue-100 overflow-hidden">
@@ -179,7 +262,7 @@ export default function ComprehensiveAssessment() {
               Comprehensive Assessment
             </h2>
             <span className="text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-700 font-semibold">
-              {currentIndex + 1}/26
+              {currentIndex + 1}/26 {currentIndex < 13 ? '(Sums)' : '(Turnarounds)'}
             </span>
           </div>
         </div>
@@ -192,14 +275,46 @@ export default function ComprehensiveAssessment() {
             
             {/* Question display */}
             <div className="text-center mb-3">
-              <div className="text-5xl font-bold text-green-600 mb-2">
-                {currentFact.operand1} + {currentFact.operand2} = ?
-              </div>
-              
-              {answer && (
-                <div className="text-4xl font-bold text-gray-800">
-                  {answer}
-                </div>
+              {currentQ.isTurnaround && currentQ.baseFact ? (
+                <>
+                  <div className="text-3xl font-bold text-green-600 mb-2">
+                    {currentQ.baseFact.operand1} + {currentQ.baseFact.operand2} = {currentQ.baseFact.result}
+                  </div>
+                  <div className="text-2xl text-gray-600 mb-2">
+                    What&apos;s its turnaround?
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3 mb-2">
+                    <div className="flex items-center justify-center gap-2 text-4xl font-bold text-gray-900">
+                      <input
+                        type="text"
+                        value={answer1}
+                        readOnly
+                        className="w-16 h-16 text-center border-3 border-gray-400 rounded-lg text-3xl bg-white"
+                        placeholder="?"
+                      />
+                      <span className="text-gray-800">+</span>
+                      <input
+                        type="text"
+                        value={answer2}
+                        readOnly
+                        className="w-16 h-16 text-center border-3 border-gray-400 rounded-lg text-3xl bg-white"
+                        placeholder="?"
+                      />
+                      <span className="text-gray-800">= ?</span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="text-5xl font-bold text-green-600 mb-2">
+                    {currentFact.operand1} + {currentFact.operand2} = ?
+                  </div>
+                  {answer && (
+                    <div className="text-4xl font-bold text-gray-800">
+                      {answer}
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
@@ -213,15 +328,48 @@ export default function ComprehensiveAssessment() {
             {/* Number pad */}
             {!showFeedback && (
               <>
-                <NumberPad value={answer} onChange={setAnswer} />
-                
-                <button
-                  onClick={handleSubmit}
-                  disabled={!answer}
-                  className="w-full mt-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white text-xl font-bold py-4 rounded-xl transition shadow-lg"
-                >
-                  Submit
-                </button>
+                {currentQ.isTurnaround ? (
+                  <>
+                    <NumberPad 
+                      value=""
+                      onChange={(val) => {
+                        if (val === '') {
+                          setAnswer1('');
+                          setAnswer2('');
+                        } else {
+                          // Auto-fill first empty box
+                          if (!answer1) {
+                            setAnswer1(val);
+                          } else if (!answer2) {
+                            setAnswer2(val);
+                          } else {
+                            setAnswer2(val);
+                          }
+                        }
+                      }}
+                    />
+                    
+                    <button
+                      onClick={handleSubmit}
+                      disabled={!answer1 || !answer2}
+                      className="w-full mt-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white text-xl font-bold py-4 rounded-xl transition shadow-lg"
+                    >
+                      Submit
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <NumberPad value={answer} onChange={setAnswer} />
+                    
+                    <button
+                      onClick={handleSubmit}
+                      disabled={!answer}
+                      className="w-full mt-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white text-xl font-bold py-4 rounded-xl transition shadow-lg"
+                    >
+                      Submit
+                    </button>
+                  </>
+                )}
               </>
             )}
           </div>
