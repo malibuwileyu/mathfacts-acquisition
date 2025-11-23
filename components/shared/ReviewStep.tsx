@@ -57,9 +57,19 @@ export default function ReviewStep({ lesson, onComplete }: Props) {
     let correct: boolean;
     
     if (currentQuestion.askAsTurnaround) {
-      // Check turnaround: both operands must match
+      // Check turnaround: both operands must match IN ORDER
       const userOp1 = parseInt(answer1);
       const userOp2 = parseInt(answer2);
+      
+      console.log('Turnaround check:', {
+        userOp1,
+        userOp2,
+        expectedOp1: currentFact.operand1,
+        expectedOp2: currentFact.operand2,
+        showing: currentQuestion.turnaroundOf?.id,
+        expecting: currentFact.id
+      });
+      
       correct = userOp1 === currentFact.operand1 && userOp2 === currentFact.operand2;
     } else {
       // Check sum
