@@ -38,25 +38,9 @@ export default function FFIntroduction({ onComplete }: Props) {
             <div className="text-5xl font-bold text-purple-600 mb-3 text-center">
               2 + 1 = 3
             </div>
-            <div className="text-2xl text-gray-500 mb-3 text-center">
-              ↕️ switch
-            </div>
-            <div className="text-5xl font-bold text-pink-600 mb-3 text-center">
+            <div className="text-5xl font-bold text-pink-600 text-center">
               1 + 2 = 3
             </div>
-            <div className="text-xl font-bold text-green-600 text-center">
-              Same answer!
-            </div>
-          </div>
-
-          {/* Simple explanation */}
-          <div className="bg-blue-50 rounded-xl p-4 mb-5 text-center">
-            <p className="text-lg text-gray-800 mb-2">
-              <span className="font-bold text-blue-600">Turnaround</span> = numbers switch places 🔄
-            </p>
-            <p className="text-lg text-gray-800">
-              <span className="font-bold text-purple-600">Fact Family</span> = two turnarounds 👨‍👩‍👧‍👦
-            </p>
           </div>
 
           {/* Controls */}

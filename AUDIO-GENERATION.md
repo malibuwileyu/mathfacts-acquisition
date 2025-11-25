@@ -70,15 +70,69 @@ npm run generate-audio -- --provider=deepgram
 
 ```
 instructions/great-job.mp3
+instructions/good-job.mp3              # NEW: "Good job!"
 instructions/excellent-work.mp3
 instructions/keep-going.mp3
 instructions/try-again.mp3
 instructions/listen-carefully.mp3
+instructions/listen-and-remember.mp3   # NEW: "Listen and remember the facts."
 instructions/your-turn.mp3
+instructions/your-turn-read-it.mp3     # NEW: "Your turn to read it."
+instructions/read-together-intro.mp3   # NEW: "This time, I'll read it, then you read it."
+instructions/great-job-reading.mp3     # NEW: "Great job reading the facts!"
 instructions/practice-more.mp3
 instructions/doing-great.mp3
-instructions/fact-family.mp3          # "They have the same sum. They're a fact family!"
+instructions/fact-family.mp3           # "They have the same sum. They're a fact family!"
+instructions/plus-one-rule-part1.mp3   # NEW: Plus 1 rule intro (~4s)
+instructions/plus-one-rule-part2.mp3   # NEW: Plus 1 rule example (~4s)
+instructions/plus-one-rule-part3.mp3   # NEW: Plus 1 rule reminder (~3s)
+instructions/plus-zero-rule-part1.mp3  # NEW: Plus 0 rule intro (~4s)
+instructions/plus-zero-rule-part2.mp3  # NEW: Plus 0 rule example (~4s)
+instructions/plus-zero-rule-part3.mp3  # NEW: Plus 0 rule reminder (~3s)
 ```
+
+**Note:** The new instruction files marked "NEW" need to be generated for the updated Series Saying steps.
+
+### Rule Audio Scripts:
+
+**Plus One Rule (3 separate files):**
+
+```
+instructions/plus-one-rule-part1.mp3
+"Here's a rule for plus 1 facts. When you plus one, you say the next number."
+
+instructions/plus-one-rule-part2.mp3
+"2+1 = 3 because 3 is the next number after 2."
+
+instructions/plus-one-rule-part3.mp3
+"Remember the rule: When you plus one, you say the next number."
+```
+
+**Plus Zero Rule (3 separate files):**
+
+```
+instructions/plus-zero-rule-part1.mp3
+"Here's a rule for plus 0 facts. When you plus zero, the number stays the same."
+
+instructions/plus-zero-rule-part2.mp3
+"2+0 = 2 because when you add zero, nothing changes."
+
+instructions/plus-zero-rule-part3.mp3
+"Remember the rule: When you plus zero, the number stays the same."
+```
+
+**How it works:**
+- Generate 3 separate MP3 files per rule (6 total)
+- Code adds 1.5 second pauses between each file automatically
+- Arrow appears 2 seconds into part 2 (when "because [result]" is said)
+- Total duration: ~14 seconds with pauses
+
+**OR (alternative):**
+You can generate ONE MP3 per rule with 1.5s silences baked in, named:
+- `instructions/plus-one-rule.mp3`
+- `instructions/plus-zero-rule.mp3`
+
+But the 3-file approach is more flexible for editing.
 
 ---
 

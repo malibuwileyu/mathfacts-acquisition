@@ -145,13 +145,26 @@ export function getFactAudio(factId: string, type: 'statement' | 'question' | 'c
 export function getInstructionAudio(key: string): AudioFile {
   const instructions: Record<string, string> = {
     'great-job': 'Great job!',
+    'good-job': 'Good job!',
     'excellent-work': 'Excellent work!',
     'keep-going': 'Keep going!',
     'try-again': 'Not quite. Let\'s try again.',
     'listen-carefully': 'Listen carefully.',
+    'listen-and-remember': 'Listen and remember the facts.',
     'your-turn': 'Your turn!',
+    'your-turn-read-it': 'Your turn to read it.',
+    'read-together-intro': 'This time, I\'ll read it, then you read it.',
+    'great-job-reading': 'Great job reading the facts!',
     'practice-more': 'Let\'s practice this one more time.',
-    'doing-great': 'You\'re doing great!'
+    'doing-great': 'You\'re doing great!',
+    // Plus 1 rule (3 parts)
+    'plus-one-rule-part1': 'Here\'s a rule for plus 1 facts. When you plus one, you say the next number.',
+    'plus-one-rule-part2': '2+1 = 3 because 3 is the next number after 2.',
+    'plus-one-rule-part3': 'Remember the rule: When you plus one, you say the next number.',
+    // Plus 0 rule (3 parts)
+    'plus-zero-rule-part1': 'Here\'s a rule for plus 0 facts. When you plus zero, the number stays the same.',
+    'plus-zero-rule-part2': '2+0 = 2 because when you add zero, nothing changes.',
+    'plus-zero-rule-part3': 'Remember the rule: When you plus zero, the number stays the same.'
   };
   
   return {

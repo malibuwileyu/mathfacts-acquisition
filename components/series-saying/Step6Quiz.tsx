@@ -1,5 +1,5 @@
 /**
- * Series Saying Step 5: Quiz
+ * Series Saying Step 6: Quiz
  * Final assessment in different order, 85% mastery required
  * 
  * @spec BRAINLIFT.md - "Problems presented one at a time in different but deliberate specific quiz order"
@@ -24,7 +24,7 @@ interface QuizAnswer {
   correct: boolean;
 }
 
-export default function Step5Quiz({ lesson, onComplete }: Props) {
+export default function Step6Quiz({ lesson, onComplete }: Props) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answer, setAnswer] = useState('');
   const [answers, setAnswers] = useState<QuizAnswer[]>([]);
