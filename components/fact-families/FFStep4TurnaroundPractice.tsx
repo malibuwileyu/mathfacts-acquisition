@@ -31,6 +31,10 @@ export default function FFStep4TurnaroundPractice({ lesson, onComplete }: Props)
   const baseFact = lesson.facts.find(f => f.id === currentPair[0])!;
   const [turnA, turnB] = currentPair[1].split('+').map(Number);
 
+  // Determine expected digits
+  const expectedDigits1 = turnA < 10 ? 1 : 2;
+  const expectedDigits2 = turnB < 10 ? 1 : 2;
+
   useEffect(() => {
     playQuestion();
   }, [currentPairIndex]);
@@ -46,6 +50,8 @@ export default function FFStep4TurnaroundPractice({ lesson, onComplete }: Props)
   };
 
   const handleSubmit = () => {
+    if (!answer1 || !answer2 || showFeedback) return;
+    
     const num1 = parseInt(answer1);
     const num2 = parseInt(answer2);
     const correct = num1 === turnA && num2 === turnB;
@@ -76,37 +82,66 @@ export default function FFStep4TurnaroundPractice({ lesson, onComplete }: Props)
       }
     }, 1500);
   };
+  
+  // Auto-submit when both answers are complete
+  useEffect(() => {
+    if (answer1.length === expectedDigits1 && answer2.length === expectedDigits2 && !showFeedback) {
+      handleSubmit();
+    }
+  }, [answer1, answer2]);
 
   return (
     <div className="h-full p-3 flex flex-col justify-center">
       <div className="max-w-md w-full mx-auto">
         <div className="bg-white rounded-xl shadow-xl p-4">
           
+          <div className={`text-center mb-4 p-6 rounded-xl transition-all ${
+            showFeedback 
+              ? isCorrect 
+                ? 'bg-green-100' 
+                : 'bg-red-100'
+              : ''
+          }`}>
           {/* Audio indicator only */}
-          <div className="text-center mb-4">
+            {!showFeedback && (
+              <>
             <div className="text-6xl mb-3">🎧</div>
             <p className="text-lg text-gray-700">Listen...</p>
-          </div>
+              </>
+            )}
 
           {/* Answer input */}
-          {(answer1 || answer2) && (
-            <div className="bg-gray-50 rounded-lg p-3 mb-3 text-center">
-              <div className="text-4xl font-bold text-gray-900">
-                {answer1 || '_'} + {answer2 || '_'}
+            {(answer1 || answer2) && !showFeedback && (
+              <div className="bg-gray-50 rounded-lg p-3 mt-3">
+                <div className="text-4xl font-bold font-mono text-gray-900">
+                  {answer1 ? String(answer1).padStart(2, ' ') : '__'} + {answer2 ? String(answer2).padStart(2, ' ') : '__'}
+                </div>
               </div>
+            )}
+
+            {/* Feedback - inline */}
+            {showFeedback && (
+              <div>
+                {isCorrect ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="text-6xl text-green-600">✓</div>
+                    <div className="text-2xl font-bold text-green-700">Great job!</div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="text-6xl text-red-600">✗</div>
+                    <div className="text-xl text-red-700">Listen. The turnaround is</div>
+                    <div className="text-3xl font-bold font-mono text-red-700">
+                      {String(turnA).padStart(2, ' ')} + <span className="underline">{String(turnB).padStart(2, ' ')}</span> = {String(baseFact.result).padStart(2, ' ')}
+                    </div>
+                  </div>
+                )}
             </div>
           )}
-
-          {/* Feedback */}
-          {showFeedback ? (
-            <div className={`text-center mb-2 text-3xl ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-              {isCorrect ? '✓' : '✗'}
             </div>
-          ) : null}
 
           {/* Number pad */}
           {!showFeedback && (
-            <>
               <NumberPad 
                 value=""
                 onChange={(val) => {
@@ -114,25 +149,16 @@ export default function FFStep4TurnaroundPractice({ lesson, onComplete }: Props)
                     setAnswer1('');
                     setAnswer2('');
                   } else {
-                    if (!answer1) {
-                      setAnswer1(val);
-                    } else if (!answer2) {
-                      setAnswer2(val);
+                  if (!answer1 || answer1.length < expectedDigits1) {
+                    setAnswer1(answer1 + val);
+                  } else if (!answer2 || answer2.length < expectedDigits2) {
+                    setAnswer2(answer2 + val);
                     } else {
                       setAnswer2(val);
                     }
                   }
                 }}
               />
-              
-              <button
-                onClick={handleSubmit}
-                disabled={!answer1 || !answer2}
-                className="w-full mt-3 bg-indigo-500 hover:bg-indigo-600 disabled:bg-gray-400 text-white text-xl font-bold py-4 rounded-xl transition shadow-lg"
-              >
-                Submit
-              </button>
-            </>
           )}
         </div>
       </div>

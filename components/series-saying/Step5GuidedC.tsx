@@ -1,5 +1,5 @@
 /**
- * Series Saying Step 4: Guided Practice C
+ * Series Saying Step 5: Guided Practice C
  * Student recalls from memory (audio prompt only, no visual)
  * 
  * @spec BRAINLIFT.md - "Student says facts and answers in order from memory"
@@ -18,7 +18,7 @@ interface Props {
   onComplete: () => void;
 }
 
-export default function Step4GuidedC({ lesson, onComplete }: Props) {
+export default function Step5GuidedC({ lesson, onComplete }: Props) {
   const [currentFactIndex, setCurrentFactIndex] = useState(0);
   const [answer, setAnswer] = useState('');
   const [showFeedback, setShowFeedback] = useState(false);

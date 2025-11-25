@@ -3,14 +3,14 @@
  * Student listens to teacher model the facts
  * 
  * @spec BRAINLIFT.md - "Modeled Instruction - Student just listens"
- * @spec CLIENT-REQUIREMENTS.md - Computer-mediated with pre-generated audio
+ * @spec CLIENT-REQUIREMENTS.md - Auto-start after 2s delay, no buttons
  */
 
 'use client';
 
 import { Lesson } from '@/types';
-import { useState } from 'react';
-import { useAudio, getFactAudio } from '@/lib/useAudio';
+import { useState, useEffect } from 'react';
+import { useAudio, getFactAudio, getInstructionAudio } from '@/lib/useAudio';
 import { isFirstPlusOne, isFirstPlusZero, getPlusOneRule, getPlusZeroRule } from '@/lib/lessonRules';
 
 interface Props {
@@ -21,48 +21,32 @@ interface Props {
 export default function Step1Modeled({ lesson, onComplete }: Props) {
   const [currentFactIndex, setCurrentFactIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [hasHeardCurrent, setHasHeardCurrent] = useState(false);
+  const [allComplete, setAllComplete] = useState(false);
   const { playAudio } = useAudio();
 
   const currentFact = lesson.facts[currentFactIndex];
 
-  const handlePlayCurrent = async () => {
-    setIsPlaying(true);
-    
-    // Check if we need to teach a rule first
-    if (isFirstPlusOne(lesson, currentFactIndex)) {
-      const rule = getPlusOneRule();
-      await playAudio({ filename: rule.audioFile, text: rule.text });
-      await new Promise(r => setTimeout(r, 1000));
-    } else if (isFirstPlusZero(lesson, currentFactIndex)) {
-      const rule = getPlusZeroRule();
-      await playAudio({ filename: rule.audioFile, text: rule.text });
-      await new Promise(r => setTimeout(r, 1000));
-    }
-    
-    const audioFile = getFactAudio(currentFact.id, 'statement');
-    await playAudio(audioFile);
-    
-    setIsPlaying(false);
-    setHasHeardCurrent(true);
-    
-    // Move to next fact if not at end
-    if (currentFactIndex < lesson.facts.length - 1) {
-      setTimeout(() => {
-        setCurrentFactIndex(currentFactIndex + 1);
-        setHasHeardCurrent(false);
-      }, 500);
-    }
-  };
+  // Auto-start after 2s delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      playAllFacts();
+    }, 2000);
 
-  const handlePlayAll = async () => {
+    return () => clearTimeout(timer);
+  }, []);
+
+  const playAllFacts = async () => {
     setIsPlaying(true);
-    setCurrentFactIndex(0);
     
+    // Introduction: "Listen and remember the facts."
+    await playAudio(getInstructionAudio('listen-and-remember'));
+    await new Promise(r => setTimeout(r, 500));
+    
+    // Play all facts
     for (let i = 0; i < lesson.facts.length; i++) {
       setCurrentFactIndex(i);
       
-      // Check if we need to teach a rule first
+      // Check if we need to teach a rule first (Plus 1 or Plus 0)
       if (isFirstPlusOne(lesson, i)) {
         const rule = getPlusOneRule();
         await playAudio({ filename: rule.audioFile, text: rule.text });
@@ -84,7 +68,7 @@ export default function Step1Modeled({ lesson, onComplete }: Props) {
     
     setCurrentFactIndex(lesson.facts.length - 1);
     setIsPlaying(false);
-    setHasHeardCurrent(true);  // Enable Next Step button
+    setAllComplete(true);
   };
 
   return (
@@ -100,6 +84,8 @@ export default function Step1Modeled({ lesson, onComplete }: Props) {
                 className={`text-center p-4 rounded-xl transition-all ${
                   index === currentFactIndex
                     ? 'bg-blue-500 text-white shadow-xl scale-105'
+                    : index < currentFactIndex
+                    ? 'bg-green-100 text-gray-700'
                     : 'bg-gray-100 text-gray-500'
                 }`}
               >
@@ -110,33 +96,22 @@ export default function Step1Modeled({ lesson, onComplete }: Props) {
             ))}
           </div>
 
-          {/* Controls */}
-          <div className="space-y-4">
+          {/* Show Next button when all complete */}
+          {allComplete && (
             <button
-              onClick={handlePlayCurrent}
-              disabled={isPlaying}
-              className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white text-2xl font-bold py-5 rounded-xl transition shadow-lg"
+              onClick={onComplete}
+              className="w-full bg-green-500 hover:bg-green-600 text-white text-2xl font-bold py-5 rounded-xl transition shadow-lg"
             >
-              🔊 Hear This
+              Next →
             </button>
-
-            <button
-              onClick={handlePlayAll}
-              disabled={isPlaying}
-              className="w-full bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white text-2xl font-bold py-5 rounded-xl transition shadow-lg"
-            >
-              🔊 Hear All
-            </button>
-
-            {currentFactIndex === lesson.facts.length - 1 && hasHeardCurrent && !isPlaying && (
-              <button
-                onClick={onComplete}
-                className="w-full bg-green-500 hover:bg-green-600 text-white text-2xl font-bold py-5 rounded-xl transition shadow-lg"
-              >
-                Next Step →
-              </button>
-            )}
-          </div>
+          )}
+          
+          {/* Loading indicator while playing */}
+          {isPlaying && !allComplete && (
+            <div className="text-center text-gray-500 text-xl">
+              🔊 Listen carefully...
+            </div>
+          )}
         </div>
       </div>
     </div>

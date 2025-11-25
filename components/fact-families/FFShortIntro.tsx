@@ -38,7 +38,6 @@ export default function FFShortIntro({ onComplete }: Props) {
             <div className="text-5xl font-bold text-purple-600 mb-3">
               2 + 1 = 3
             </div>
-            <div className="text-2xl text-gray-500 mb-3">↕️</div>
             <div className="text-5xl font-bold text-pink-600 mb-3">
               1 + 2 = 3
             </div>

@@ -24,6 +24,7 @@ export default function FFStep3Turnarounds({ lesson, onComplete }: Props) {
   const [answer2, setAnswer2] = useState('');
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
+  const [hasHeardOnce, setHasHeardOnce] = useState(false);
   const { playAudio } = useAudio();
 
   const currentPair = lesson.commutativePairs![currentPairIndex];
@@ -31,10 +32,15 @@ export default function FFStep3Turnarounds({ lesson, onComplete }: Props) {
   
   // The turnaround is the reverse
   const [turnA, turnB] = currentPair[1].split('+').map(Number);
+  
+  // Determine expected digits for each operand
+  const expectedDigits1 = turnA < 10 ? 1 : 2;
+  const expectedDigits2 = turnB < 10 ? 1 : 2;
 
+  // Auto-play on mount and when moving to next pair
   useEffect(() => {
-    // Don't auto-play on load (causes TTS fallback)
-    // Student will click button to hear question
+    setHasHeardOnce(false);
+    playQuestion();
   }, [currentPairIndex]);
 
   const playQuestion = async () => {
@@ -45,9 +51,13 @@ export default function FFStep3Turnarounds({ lesson, onComplete }: Props) {
       filename: 'instructions/whats-turnaround.mp3',
       text: "What's its turnaround?"
     });
+    
+    setHasHeardOnce(true);
   };
 
   const handleSubmit = () => {
+    if (!answer1 || !answer2 || showFeedback) return;
+    
     const num1 = parseInt(answer1);
     const num2 = parseInt(answer2);
     const correct = num1 === turnA && num2 === turnB;
@@ -67,6 +77,13 @@ export default function FFStep3Turnarounds({ lesson, onComplete }: Props) {
       }
     }, 1500);
   };
+  
+  // Auto-submit when both answers are complete
+  useEffect(() => {
+    if (answer1.length === expectedDigits1 && answer2.length === expectedDigits2 && !showFeedback) {
+      handleSubmit();
+    }
+  }, [answer1, answer2]);
 
   return (
     <div className="h-full p-3 flex flex-col justify-center">
@@ -81,80 +98,98 @@ export default function FFStep3Turnarounds({ lesson, onComplete }: Props) {
           </div>
 
           {/* Base fact + question (combined) */}
-          <div className="text-center mb-3">
-            <div className="text-4xl font-bold text-teal-600 mb-2">
-              {baseFact.operand1} + {baseFact.operand2} = {baseFact.result}
+          <div className={`text-center mb-3 p-6 rounded-xl transition-all ${
+            showFeedback 
+              ? isCorrect 
+                ? 'bg-green-100' 
+                : 'bg-red-100'
+              : ''
+          }`}>
+            {/* Given equation - aligned */}
+            <div className="text-4xl font-bold font-mono text-teal-600 mb-2">
+              {String(baseFact.operand1).padStart(2, '\u00A0')} + {String(baseFact.operand2).padStart(2, '\u00A0')} = {String(baseFact.result).padStart(2, '\u00A0')}
             </div>
-            <button
-              onClick={playQuestion}
-              className="bg-teal-400 hover:bg-teal-500 text-white text-sm font-bold px-3 py-1 rounded-lg"
-            >
-              🔊 Hear
-            </button>
-          </div>
+            
+            {/* Hear button (only shows after first play) */}
+            {hasHeardOnce && !showFeedback && (
+              <button
+                onClick={playQuestion}
+                className="bg-teal-400 hover:bg-teal-500 text-white text-sm font-bold px-3 py-1 rounded-lg mb-3"
+              >
+                🔊 Hear Again
+              </button>
+            )}
 
-          {/* Answer input */}
-          <div className="bg-gray-50 rounded-lg p-3 mb-2">
-            <div className="flex items-center justify-center gap-2 text-3xl font-bold text-gray-900">
-              <input
-                type="text"
-                value={answer1}
-                onChange={(e) => setAnswer1(e.target.value)}
-                className="w-16 h-16 text-center border-3 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none text-2xl"
-                maxLength={2}
-                autoFocus
-              />
-              <span className="text-gray-900">+</span>
-              <input
-                type="text"
-                value={answer2}
-                onChange={(e) => setAnswer2(e.target.value)}
-                className="w-16 h-16 text-center border-3 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none text-2xl"
-                maxLength={2}
-              />
-              <span className="text-gray-900">= {baseFact.result}</span>
-            </div>
-          </div>
+            {/* Answer input - aligned vertically */}
+            {!showFeedback && (
+              <div className="mt-3">
+                <div className="text-4xl font-bold font-mono text-gray-900 flex items-center justify-center gap-2">
+                  <input
+                    type="text"
+                    value={answer1}
+                    onChange={(e) => setAnswer1(e.target.value)}
+                    className="w-16 h-16 text-center border-3 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none text-3xl font-mono"
+                    placeholder="__"
+                    maxLength={2}
+                    autoFocus
+                  />
+                  <span>+</span>
+                  <input
+                    type="text"
+                    value={answer2}
+                    onChange={(e) => setAnswer2(e.target.value)}
+                    className="w-16 h-16 text-center border-3 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none text-3xl font-mono"
+                    placeholder="__"
+                    maxLength={2}
+                  />
+                  <span>= {String(baseFact.result).padStart(2, '\u00A0')}</span>
+                </div>
+              </div>
+            )}
 
-          {/* Feedback */}
-          {showFeedback ? (
-            <div className={`text-center mb-2 text-2xl ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-              {isCorrect ? '✓' : '✗'}
-            </div>
-          ) : null}
+            {/* Feedback - inline */}
+            {showFeedback && (
+              <div className="mt-4">
+                {isCorrect ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="text-6xl text-green-600">✓</div>
+                    <div className="text-2xl font-bold text-green-700">Great job!</div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="text-6xl text-red-600">✗</div>
+                    <div className="text-xl text-red-700">Listen. The turnaround is</div>
+                    <div className="text-3xl font-bold font-mono text-red-700">
+                      {String(turnA).padStart(2, '\u00A0')} + <span className="underline">{String(turnB).padStart(2, '\u00A0')}</span> = {String(baseFact.result).padStart(2, '\u00A0')}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Number pad */}
           {!showFeedback && (
-            <>
-              <NumberPad 
-                value=""  // Display shows current state in inputs, not here
-                onChange={(val) => {
-                  if (val === '') {
-                    // Clear button pressed - clear both
-                    setAnswer1('');
-                    setAnswer2('');
+            <NumberPad 
+              value=""  // Display shows current state in inputs, not here
+              onChange={(val) => {
+                if (val === '') {
+                  // Clear button pressed - clear both
+                  setAnswer1('');
+                  setAnswer2('');
+                } else {
+                  // Number pressed - auto-fill first empty box
+                  if (!answer1 || answer1.length < expectedDigits1) {
+                    setAnswer1(answer1 + val);
+                  } else if (!answer2 || answer2.length < expectedDigits2) {
+                    setAnswer2(answer2 + val);
                   } else {
-                    // Number pressed - auto-fill first empty box
-                    if (!answer1) {
-                      setAnswer1(val);
-                    } else if (!answer2) {
-                      setAnswer2(val);
-                    } else {
-                      // Both full, replace second
-                      setAnswer2(val);
-                    }
+                    // Both full, replace second
+                    setAnswer2(val);
                   }
-                }}
-              />
-              
-              <button
-                onClick={handleSubmit}
-                disabled={!answer1 || !answer2}
-                className="w-full mt-2 bg-teal-500 hover:bg-teal-600 disabled:bg-gray-400 text-white text-lg font-bold py-3 rounded-xl transition shadow-lg"
-              >
-                Check
-              </button>
-            </>
+                }
+              }}
+            />
           )}
         </div>
       </div>

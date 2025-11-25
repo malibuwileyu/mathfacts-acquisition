@@ -11,11 +11,13 @@ import {
 } from '@/lib/progressStore';
 
 // Series Saying components
+import RuleIntroduction from '@/components/series-saying/RuleIntroduction';
 import Step1Modeled from '@/components/series-saying/Step1Modeled';
 import Step2GuidedA from '@/components/series-saying/Step2GuidedA';
-import Step3GuidedB from '@/components/series-saying/Step3GuidedB';
-import Step4GuidedC from '@/components/series-saying/Step4GuidedC';
-import Step5Quiz from '@/components/series-saying/Step5Quiz';
+import Step3TypeSums from '@/components/series-saying/Step3TypeSums';
+import Step4GuidedB from '@/components/series-saying/Step4GuidedB';
+import Step5GuidedC from '@/components/series-saying/Step5GuidedC';
+import Step6Quiz from '@/components/series-saying/Step6Quiz';
 
 // Fact Families components
 import FFIntroduction from '@/components/fact-families/FFIntroduction';
@@ -38,7 +40,11 @@ export default function LessonPage() {
   
   // Determine starting step based on lesson type and ID
   const getStartingStep = () => {
-    if (!lesson || lesson.format === 'series_saying') return 1;
+    if (!lesson) return 1;
+    
+    if (lesson.format === 'series_saying') {
+      return 1;  // Series Saying always starts at Step 1 (Modeled)
+    }
     
     // Fact Families intro rules:
     // Lessons 2, 4: Full intro (step 0)
@@ -78,7 +84,17 @@ export default function LessonPage() {
     );
   }
   
-  const maxSteps = lesson.format === 'series_saying' ? 5 : 7;  // Fact Families: 7 steps (added quiz intro)
+  // Max steps depends on lesson type and whether it has a rule intro
+  const getMaxSteps = () => {
+    if (lesson.format === 'series_saying') {
+      // Plus 1 or Plus 0 lessons have rule after Step 1, so 7 steps total
+      // Other series saying lessons have 6 steps
+      return [1, 3, 15].includes(lessonId) ? 7 : 6;
+    }
+    return 7;  // Fact Families: 7 steps
+  };
+  
+  const maxSteps = getMaxSteps();
   
   const handleStepComplete = () => {
     if (currentStep < maxSteps) {
@@ -202,16 +218,17 @@ export default function LessonPage() {
               </h2>
             </div>
             <span className="text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-700 font-semibold">
-              {lesson.format === 'fact_families' && currentStep === 0 
-                ? 'Intro' 
-                : `${currentStep}/${maxSteps}`
-              }
+              {`${currentStep}/${maxSteps}`}
             </span>
           </div>
           
           {/* Compact step indicators */}
           <div className="flex justify-center gap-2">
-            {Array.from({ length: maxSteps }, (_, i) => i + 1).map((step) => (
+            {Array.from({ length: maxSteps }, (_, i) => i + 1).map((step) => {
+              const isRuleStep = [1, 3, 15].includes(lessonId) && step === 2;
+              const displayStep = isRuleStep ? 'R' : step;
+              
+              return (
               <div
                 key={step}
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
@@ -220,9 +237,10 @@ export default function LessonPage() {
                   'bg-gray-300 text-gray-600'
                 }`}
               >
-                {step < currentStep ? '✓' : step}
+                  {step < currentStep ? '✓' : displayStep}
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
@@ -232,10 +250,52 @@ export default function LessonPage() {
         {lesson.format === 'series_saying' ? (
           <>
             {currentStep === 1 && <Step1Modeled lesson={lesson} onComplete={handleStepComplete} />}
-            {currentStep === 2 && <Step2GuidedA lesson={lesson} onComplete={handleStepComplete} />}
-            {currentStep === 3 && <Step3GuidedB lesson={lesson} onComplete={handleStepComplete} />}
-            {currentStep === 4 && <Step4GuidedC lesson={lesson} onComplete={handleStepComplete} />}
-            {currentStep === 5 && <Step5Quiz lesson={lesson} onComplete={handleQuizComplete} />}
+            
+            {/* Rule intro for Plus 1 and Plus 0 lessons (AFTER Step 1) */}
+            {currentStep === 2 && [1, 3].includes(lessonId) && (
+              <RuleIntroduction ruleType="plus-one" onComplete={handleStepComplete} />
+            )}
+            {currentStep === 2 && lessonId === 15 && (
+              <RuleIntroduction ruleType="plus-zero" onComplete={handleStepComplete} />
+            )}
+            
+            {/* For lessons WITHOUT rule, Step 2 is Read Together */}
+            {currentStep === 2 && ![1, 3, 15].includes(lessonId) && (
+              <Step2GuidedA lesson={lesson} onComplete={handleStepComplete} />
+            )}
+            
+            {/* For lessons WITH rule, Read Together is Step 3 */}
+            {currentStep === 3 && [1, 3, 15].includes(lessonId) && (
+              <Step2GuidedA lesson={lesson} onComplete={handleStepComplete} />
+            )}
+            {currentStep === 3 && ![1, 3, 15].includes(lessonId) && (
+              <Step3TypeSums lesson={lesson} onComplete={handleStepComplete} />
+            )}
+            
+            {currentStep === 4 && [1, 3, 15].includes(lessonId) && (
+              <Step3TypeSums lesson={lesson} onComplete={handleStepComplete} />
+            )}
+            {currentStep === 4 && ![1, 3, 15].includes(lessonId) && (
+              <Step4GuidedB lesson={lesson} onComplete={handleStepComplete} />
+            )}
+            
+            {currentStep === 5 && [1, 3, 15].includes(lessonId) && (
+              <Step4GuidedB lesson={lesson} onComplete={handleStepComplete} />
+            )}
+            {currentStep === 5 && ![1, 3, 15].includes(lessonId) && (
+              <Step5GuidedC lesson={lesson} onComplete={handleStepComplete} />
+            )}
+            
+            {currentStep === 6 && [1, 3, 15].includes(lessonId) && (
+              <Step5GuidedC lesson={lesson} onComplete={handleStepComplete} />
+            )}
+            {currentStep === 6 && ![1, 3, 15].includes(lessonId) && (
+              <Step6Quiz lesson={lesson} onComplete={handleQuizComplete} />
+            )}
+            
+            {currentStep === 7 && [1, 3, 15].includes(lessonId) && (
+              <Step6Quiz lesson={lesson} onComplete={handleQuizComplete} />
+            )}
           </>
         ) : (
           <>
