@@ -39,14 +39,6 @@ export default function FFStep6Quiz({ lesson, onComplete }: Props) {
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const { playAudio } = useAudio();
-  
-  const currentQuestion = quizQuestions[currentQuestionIndex];
-  const currentFact = currentQuestion?.fact;
-  
-  // Determine expected digits
-  const expectedDigitsSingle = currentFact ? (currentFact.result < 10 ? 1 : 2) : 1;
-  const expectedDigits1 = currentQuestion?.turnaroundAnswer ? (currentQuestion.turnaroundAnswer.num1 < 10 ? 1 : 2) : 1;
-  const expectedDigits2 = currentQuestion?.turnaroundAnswer ? (currentQuestion.turnaroundAnswer.num2 < 10 ? 1 : 2) : 1;
 
   // Build quiz: ALL turnaround questions
   const [quizQuestions] = useState(() => {
@@ -66,6 +58,14 @@ export default function FFStep6Quiz({ lesson, onComplete }: Props) {
     
     return questions;
   });
+  
+  const currentQuestion = quizQuestions[currentQuestionIndex];
+  const currentFact = currentQuestion?.fact;
+  
+  // Determine expected digits
+  const expectedDigitsSingle = currentFact ? (currentFact.result < 10 ? 1 : 2) : 1;
+  const expectedDigits1 = currentQuestion?.turnaroundAnswer ? (currentQuestion.turnaroundAnswer.num1 < 10 ? 1 : 2) : 1;
+  const expectedDigits2 = currentQuestion?.turnaroundAnswer ? (currentQuestion.turnaroundAnswer.num2 < 10 ? 1 : 2) : 1;
 
   useEffect(() => {
     if (!currentQuestion) return;
