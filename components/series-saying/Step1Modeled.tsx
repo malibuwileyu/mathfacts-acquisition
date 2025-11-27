@@ -11,7 +11,6 @@
 import { Lesson } from '@/types';
 import { useState, useEffect } from 'react';
 import { useAudio, getFactAudio, getInstructionAudio } from '@/lib/useAudio';
-import { isFirstPlusOne, isFirstPlusZero, getPlusOneRule, getPlusZeroRule } from '@/lib/lessonRules';
 
 interface Props {
   lesson: Lesson;
@@ -42,20 +41,9 @@ export default function Step1Modeled({ lesson, onComplete }: Props) {
     await playAudio(getInstructionAudio('listen-and-remember'));
     await new Promise(r => setTimeout(r, 500));
     
-    // Play all facts
+    // Play all facts (no rule teaching - that's in dedicated Rule screen now)
     for (let i = 0; i < lesson.facts.length; i++) {
       setCurrentFactIndex(i);
-      
-      // Check if we need to teach a rule first (Plus 1 or Plus 0)
-      if (isFirstPlusOne(lesson, i)) {
-        const rule = getPlusOneRule();
-        await playAudio({ filename: rule.audioFile, text: rule.text });
-        await new Promise(r => setTimeout(r, 1000));
-      } else if (isFirstPlusZero(lesson, i)) {
-        const rule = getPlusZeroRule();
-        await playAudio({ filename: rule.audioFile, text: rule.text });
-        await new Promise(r => setTimeout(r, 1000));
-      }
       
       const fact = lesson.facts[i];
       const audioFile = getFactAudio(fact.id, 'statement');
