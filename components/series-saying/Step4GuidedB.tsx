@@ -20,12 +20,20 @@ interface Props {
 }
 
 export default function Step4GuidedB({ lesson, onComplete }: Props) {
+  const [showIntro, setShowIntro] = useState(true);
   const [currentFactIndex, setCurrentFactIndex] = useState(0);
   const [answer, setAnswer] = useState('');
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
   const { playAudio } = useAudio();
+  
+  // Play quiz intro audio when shown
+  useEffect(() => {
+    if (showIntro) {
+      playAudio(getInstructionAudio('quiz-time'));
+    }
+  }, [showIntro]);
 
   const currentFact = lesson.facts[currentFactIndex];
   
@@ -87,39 +95,65 @@ export default function Step4GuidedB({ lesson, onComplete }: Props) {
     }
   };
 
+  // Quiz intro screen
+  if (showIntro) {
+    return (
+      <div className="h-full p-3 flex flex-col justify-center items-center">
+        <div className="max-w-md w-full mx-auto">
+          <div className="bg-white rounded-xl shadow-xl p-8 text-center">
+            <div className="text-6xl mb-4">📝</div>
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">Quiz Time!</h2>
+            <p className="text-xl text-gray-600 mb-6">
+              Type the answer for each fact.
+            </p>
+            <button
+              onClick={() => {
+                setShowIntro(false);
+                setQuestionStartTime(Date.now());
+              }}
+              className="bg-orange-500 hover:bg-orange-600 text-white text-2xl font-bold py-4 px-8 rounded-xl transition-colors"
+            >
+              Start Quiz
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full p-3 flex flex-col justify-center">
       <div className="max-w-4xl w-full mx-auto">
         <div className="bg-white rounded-xl shadow-xl p-6">
           
-          <div className="flex gap-4">
-            {/* Left side: All facts in 2-column grid */}
-            <div className="flex-1">
-              <div className="grid grid-cols-2 gap-2 mb-3">
+          <div className="flex gap-4 items-start">
+            {/* Left side: All facts in compact 2-column grid */}
+            <div className="flex-shrink-0">
+              <div className="grid grid-cols-2 gap-2 mb-2">
                 {lesson.facts.map((fact, index) => (
                   <div
                     key={fact.id}
-                    className={`text-center p-3 rounded-lg transition-all text-2xl font-bold ${
+                    className={`text-center px-4 py-2 rounded-lg transition-all text-xl font-bold ${
                       index === currentFactIndex
                         ? 'bg-orange-500 text-white shadow-lg scale-105'
                         : index < currentFactIndex
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-200 text-gray-800'
+                        ? 'bg-green-200 text-green-900'
+                        : 'bg-gray-300 text-gray-900'
                     }`}
                   >
-                    {fact.operand1} + {fact.operand2} = {fact.result}
+                    {fact.operand1}+{fact.operand2}={fact.result}
                   </div>
                 ))}
               </div>
 
               {/* Progress dots */}
-              <div className="flex justify-center gap-2">
+              <div className="flex justify-center gap-1">
                 {lesson.facts.map((_, index) => (
                   <div
                     key={index}
-                    className={`w-3 h-3 rounded-full ${
+                    className={`w-2 h-2 rounded-full ${
                       index === currentFactIndex ? 'bg-orange-500' :
-                      index < currentFactIndex ? 'bg-green-500' : 'bg-gray-300'
+                      index < currentFactIndex ? 'bg-green-500' : 'bg-gray-400'
                     }`}
                   />
                 ))}
@@ -167,9 +201,9 @@ export default function Step4GuidedB({ lesson, onComplete }: Props) {
                 )}
               </div>
 
-              {/* Number pad */}
-              {!showFeedback && (
-                <NumberPad value={answer} onChange={setAnswer} maxValue={20} />
+          {/* Number pad */}
+          {!showFeedback && (
+              <NumberPad value={answer} onChange={setAnswer} maxValue={20} />
               )}
             </div>
           </div>

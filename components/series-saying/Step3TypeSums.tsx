@@ -84,60 +84,77 @@ export default function Step3TypeSums({ lesson, onComplete }: Props) {
 
   return (
     <div className="h-full p-3 flex flex-col justify-center">
-      <div className="max-w-xl w-full mx-auto">
-        <div className="bg-white rounded-xl shadow-xl p-8">
+      <div className="max-w-4xl w-full mx-auto">
+        <div className="bg-white rounded-xl shadow-xl p-6">
           
-          <h2 className="text-2xl font-bold text-center text-gray-700 mb-6">
+          <h2 className="text-xl font-bold text-center text-gray-800 mb-4">
             Fill in the answers
           </h2>
 
-          {/* Display all equations vertically */}
-          <div className="space-y-4 mb-6">
-            {lesson.facts.map((fact, index) => {
-              const isCurrent = index === currentFactIndex;
-              const isCompleted = answers[index] !== null;
-              const isFailed = failedIndices.includes(index);
+          <div className="flex gap-6 items-center">
+            {/* Left side: Equations stacked vertically */}
+            <div className="flex-1">
+              <div className="space-y-3">
+                {lesson.facts.map((fact, index) => {
+                  const isCurrent = index === currentFactIndex;
+                  const isCompleted = answers[index] !== null;
+                  const isFailed = failedIndices.includes(index);
 
-              return (
-                <div
-                  key={fact.id}
-                  className={`p-4 rounded-xl transition-all border-2 ${
-                    isFailed
-                      ? 'bg-red-100 border-red-500'
-                      : isCurrent
-                      ? 'bg-blue-100 border-blue-500 scale-105'
-                      : isCompleted
-                      ? 'bg-green-100 border-green-500'
-                      : 'bg-gray-100 border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center justify-center gap-4">
-                    <span className="text-4xl font-bold">
-                      {fact.operand1} + {fact.operand2} =
-                    </span>
-                    <div className="w-24 h-16 border-2 border-dashed border-gray-400 rounded-lg flex items-center justify-center bg-white">
-                      {isCompleted ? (
-                        <span className="text-4xl font-bold text-green-600">
-                          {answers[index]} ✓
+                  return (
+                    <div
+                      key={fact.id}
+                      className={`p-3 rounded-xl transition-all border-2 ${
+                        isFailed
+                          ? 'bg-red-100 border-red-500'
+                          : isCurrent
+                          ? 'bg-orange-100 border-orange-500 scale-105'
+                          : isCompleted
+                          ? 'bg-green-100 border-green-500'
+                          : 'bg-gray-200 border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-center gap-3">
+                        <span className={`text-3xl font-bold ${
+                          isFailed ? 'text-red-900' :
+                          isCurrent ? 'text-orange-900' :
+                          isCompleted ? 'text-green-900' :
+                          'text-gray-900'
+                        }`}>
+                          {fact.operand1} + {fact.operand2} =
                         </span>
-                      ) : isCurrent && answer ? (
-                        <span className="text-4xl font-bold text-blue-600">
-                          {answer}
-                        </span>
-                      ) : (
-                        <span className="text-gray-400 text-2xl">?</span>
-                      )}
+                        <div className="w-16 h-12 border-2 border-dashed border-gray-400 rounded-lg flex items-center justify-center bg-white">
+                          {isCompleted ? (
+                            <span className="text-2xl font-bold text-green-600">
+                              {answers[index]}✓
+                            </span>
+                          ) : isCurrent && answer ? (
+                            <span className="text-2xl font-bold text-blue-600">
+                              {answer}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 text-xl">?</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                  );
+                })}
+              </div>
+            </div>
 
-          {/* Number pad (only show if not all complete) */}
-          {!allComplete && (
-            <NumberPad value={answer} onChange={setAnswer} maxValue={20} />
-          )}
+            {/* Right side: Number pad */}
+            <div className="flex-1 flex flex-col items-center justify-center">
+              {!allComplete && (
+                <NumberPad value={answer} onChange={setAnswer} maxValue={20} />
+              )}
+              
+              {allComplete && (
+                <div className="text-center text-2xl font-bold text-green-600">
+                  ✓ Great job!
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -32,7 +32,7 @@ export default function FFStep3Turnarounds({ lesson, onComplete }: Props) {
   
   // The turnaround is the reverse
   const [turnA, turnB] = currentPair[1].split('+').map(Number);
-  
+
   // Determine expected digits for each operand
   const expectedDigits1 = turnA < 10 ? 1 : 2;
   const expectedDigits2 = turnB < 10 ? 1 : 2;
@@ -112,36 +112,36 @@ export default function FFStep3Turnarounds({ lesson, onComplete }: Props) {
             
             {/* Hear button (only shows after first play) */}
             {hasHeardOnce && !showFeedback && (
-              <button
-                onClick={playQuestion}
+            <button
+              onClick={playQuestion}
                 className="bg-teal-400 hover:bg-teal-500 text-white text-sm font-bold px-3 py-1 rounded-lg mb-3"
-              >
+            >
                 🔊 Hear Again
-              </button>
+            </button>
             )}
 
             {/* Answer input - aligned vertically */}
             {!showFeedback && (
               <div className="mt-3">
                 <div className="text-4xl font-bold font-mono text-gray-900 flex items-center justify-center gap-2">
-                  <input
-                    type="text"
-                    value={answer1}
-                    onChange={(e) => setAnswer1(e.target.value)}
+              <input
+                type="text"
+                value={answer1}
+                onChange={(e) => setAnswer1(e.target.value)}
                     className="w-16 h-16 text-center border-3 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none text-3xl font-mono"
                     placeholder="__"
-                    maxLength={2}
-                    autoFocus
-                  />
+                maxLength={2}
+                autoFocus
+              />
                   <span>+</span>
-                  <input
-                    type="text"
-                    value={answer2}
-                    onChange={(e) => setAnswer2(e.target.value)}
+              <input
+                type="text"
+                value={answer2}
+                onChange={(e) => setAnswer2(e.target.value)}
                     className="w-16 h-16 text-center border-3 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none text-3xl font-mono"
                     placeholder="__"
-                    maxLength={2}
-                  />
+                maxLength={2}
+              />
                   <span>= {String(baseFact.result).padStart(2, '\u00A0')}</span>
                 </div>
               </div>
@@ -164,32 +164,32 @@ export default function FFStep3Turnarounds({ lesson, onComplete }: Props) {
                     </div>
                   </div>
                 )}
-              </div>
+            </div>
             )}
           </div>
 
           {/* Number pad */}
           {!showFeedback && (
-            <NumberPad 
-              value=""  // Display shows current state in inputs, not here
-              onChange={(val) => {
-                if (val === '') {
-                  // Clear button pressed - clear both
-                  setAnswer1('');
-                  setAnswer2('');
-                } else {
-                  // Number pressed - auto-fill first empty box
+              <NumberPad 
+                value=""  // Display shows current state in inputs, not here
+                onChange={(val) => {
+                  if (val === '') {
+                    // Clear button pressed - clear both
+                    setAnswer1('');
+                    setAnswer2('');
+                  } else {
+                    // Number pressed - auto-fill first empty box
                   if (!answer1 || answer1.length < expectedDigits1) {
                     setAnswer1(answer1 + val);
                   } else if (!answer2 || answer2.length < expectedDigits2) {
                     setAnswer2(answer2 + val);
-                  } else {
-                    // Both full, replace second
-                    setAnswer2(val);
+                    } else {
+                      // Both full, replace second
+                      setAnswer2(val);
+                    }
                   }
-                }
-              }}
-            />
+                }}
+              />
           )}
         </div>
       </div>

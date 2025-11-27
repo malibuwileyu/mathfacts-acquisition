@@ -35,17 +35,17 @@ export function generateReviewQuestions(currentLesson: Lesson): ReviewQuestion[]
   previousLessons.forEach(lesson => {
     lesson.facts.forEach(fact => {
       allPreviousFacts.push({ ...fact, lessonId: lesson.id });
+      });
     });
-  });
   
   // Select 20 questions with heavy weighting toward 6-9
   const selected = selectUniqueRandom(allPreviousFacts, totalQuestions, usedFactIds);
-  
+    
   reviewQuestions.push(...selected.map(fact => ({
-    fact,
-    isFromCurrentLesson: false,
-    sourceLesson: fact.lessonId!
-  })));
+      fact,
+      isFromCurrentLesson: false,
+      sourceLesson: fact.lessonId!
+    })));
   
   // Shuffle and return
   return shuffleArray(reviewQuestions);

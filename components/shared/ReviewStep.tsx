@@ -41,13 +41,13 @@ export default function ReviewStep({ lesson, onComplete }: Props) {
 
   useEffect(() => {
     // Play question audio
-    playAudio(getFactAudio(currentFact.id, 'question'));
+        playAudio(getFactAudio(currentFact.id, 'question'));
   }, [currentQuestionIndex, currentFact.id, playAudio]);
 
   const handleSubmit = () => {
     if (!answer || showFeedback) return;
     
-    const userAnswer = parseInt(answer);
+      const userAnswer = parseInt(answer);
     const correct = userAnswer === currentFact.result;
     const timeSpent = Date.now() - questionStartTime;
     
@@ -115,11 +115,11 @@ export default function ReviewStep({ lesson, onComplete }: Props) {
           }`}>
             <div className="text-5xl font-bold text-orange-600 mb-2">
               {currentFact.operand1} + {currentFact.operand2} = {showFeedback ? currentFact.result : '?'}
-            </div>
+                </div>
             {answer && !showFeedback && (
               <div className="text-4xl font-bold text-gray-800 mt-2">
                 {answer}
-              </div>
+                </div>
             )}
             
             {/* Feedback - inline */}
@@ -136,7 +136,7 @@ export default function ReviewStep({ lesson, onComplete }: Props) {
                     <div className="text-xl text-red-700">Listen.</div>
                     <div className="text-3xl font-bold text-red-700">
                       {currentFact.operand1} + {currentFact.operand2} = <span className="underline">{currentFact.result}</span>
-                    </div>
+                </div>
                   </div>
                 )}
               </div>
@@ -145,7 +145,7 @@ export default function ReviewStep({ lesson, onComplete }: Props) {
 
           {/* Number pad */}
           {!showFeedback && (
-            <NumberPad value={answer} onChange={setAnswer} />
+                  <NumberPad value={answer} onChange={setAnswer} />
           )}
         </div>
       </div>

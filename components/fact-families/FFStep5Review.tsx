@@ -57,7 +57,16 @@ export default function FFStep5Review({ lesson, onComplete }: Props) {
     setCanType(true);  // Enable number pad now
   };
 
+  // Calculate display values for render
+  const displayPair = lesson.commutativePairs![currentPairIndex];
+  const fact1 = lesson.facts.find(f => f.id === displayPair[0])!;
+  const [turnA, turnB] = displayPair[1].split('+').map(Number);
+  
+  // Determine expected digits for auto-submit
+  const expectedDigits = turnB < 10 ? 1 : 2;
+
   const handleSubmit = () => {
+    if (!answer || showFeedback) return;
     const userAnswer = parseInt(answer);
     const correct = userAnswer === turnB;
     
@@ -76,10 +85,12 @@ export default function FFStep5Review({ lesson, onComplete }: Props) {
     }, 1500);
   };
   
-  // Calculate display values for render
-  const displayPair = lesson.commutativePairs![currentPairIndex];
-  const fact1 = lesson.facts.find(f => f.id === displayPair[0])!;
-  const [turnA, turnB] = displayPair[1].split('+').map(Number);
+  // Auto-submit when answer is complete
+  useEffect(() => {
+    if (answer.length === expectedDigits && canType && !showFeedback) {
+      handleSubmit();
+    }
+  }, [answer]);
 
   return (
     <div className="h-full p-3 flex flex-col justify-center">
@@ -118,17 +129,7 @@ export default function FFStep5Review({ lesson, onComplete }: Props) {
 
           {/* Number pad - only enabled after "complete" instruction */}
           {!showFeedback && canType && (
-            <>
-              <NumberPad value={answer} onChange={setAnswer} />
-              
-              <button
-                onClick={handleSubmit}
-                disabled={!answer}
-                className="w-full mt-3 bg-teal-500 hover:bg-teal-600 disabled:bg-gray-400 text-white text-xl font-bold py-4 rounded-xl transition shadow-lg"
-              >
-                Submit
-              </button>
-            </>
+            <NumberPad value={answer} onChange={setAnswer} maxValue={20} />
           )}
           
           {/* Waiting message before number pad enabled */}
