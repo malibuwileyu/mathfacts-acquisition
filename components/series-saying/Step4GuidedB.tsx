@@ -95,16 +95,16 @@ export default function Step4GuidedB({ lesson, onComplete }: Props) {
           <div className="flex gap-4">
             {/* Left side: All facts in 2-column grid */}
             <div className="flex-1">
-              <div className="grid grid-cols-2 gap-2 mb-3">
+              <div className="grid grid-cols-2 gap-3 mb-3">
                 {lesson.facts.map((fact, index) => (
                   <div
                     key={fact.id}
-                    className={`text-center p-3 rounded-lg transition-all text-2xl font-bold ${
+                    className={`text-center p-4 rounded-xl transition-all text-3xl font-bold border-2 ${
                       index === currentFactIndex
-                        ? 'bg-orange-500 text-white shadow-lg scale-105'
+                        ? 'bg-orange-500 text-white shadow-lg scale-105 border-orange-600'
                         : index < currentFactIndex
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-200 text-gray-800'
+                        ? 'bg-green-200 text-green-900 border-green-400'
+                        : 'bg-white text-gray-900 border-gray-400'
                     }`}
                   >
                     {fact.operand1} + {fact.operand2} = {fact.result}
