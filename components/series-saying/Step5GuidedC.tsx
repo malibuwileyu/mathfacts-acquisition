@@ -28,6 +28,9 @@ export default function Step5GuidedC({ lesson, onComplete }: Props) {
   const { playAudio } = useAudio();
 
   const currentFact = lesson.facts[currentFactIndex];
+  
+  // Determine expected digits for auto-submit
+  const expectedDigits = currentFact.result < 10 ? 1 : 2;
 
   useEffect(() => {
     // Auto-play question when fact changes
@@ -43,6 +46,7 @@ export default function Step5GuidedC({ lesson, onComplete }: Props) {
   };
 
   const handleSubmit = async () => {
+    if (!answer || showFeedback) return;
     const userAnswer = parseInt(answer);
     const correct = userAnswer === currentFact.result;
     const timeSpent = Date.now() - questionStartTime;
@@ -61,7 +65,7 @@ export default function Step5GuidedC({ lesson, onComplete }: Props) {
 
     if (correct) {
       await playAudio(getInstructionAudio('great-job'));
-      setTimeout(() => moveToNext(), 1500);
+      setTimeout(() => moveToNext(), 1000);
     } else {
       await playAudio(getInstructionAudio('try-again'));
       await playAudio(getFactAudio(currentFact.id, 'correction'));
@@ -82,41 +86,56 @@ export default function Step5GuidedC({ lesson, onComplete }: Props) {
     }
   };
 
+  // Auto-submit when answer is complete
+  useEffect(() => {
+    if (answer.length === expectedDigits && !showFeedback) {
+      handleSubmit();
+    }
+  }, [answer]);
+
   return (
     <div className="h-full p-3 flex flex-col justify-center">
       <div className="max-w-md w-full mx-auto">
-        <div className="bg-white rounded-xl shadow-xl p-5">
+        <div className="bg-white rounded-xl shadow-xl p-6">
           
-          {/* Simple answer display */}
-          {answer && (
-            <div className="text-center mb-3">
-              <div className="text-5xl font-bold text-indigo-600">
-                {answer}
-              </div>
-            </div>
-          )}
+          {/* Progress dots at top */}
+          <div className="flex justify-center gap-2 mb-4">
+            {lesson.facts.map((_, index) => (
+              <div
+                key={index}
+                className={`w-3 h-3 rounded-full ${
+                  index === currentFactIndex ? 'bg-indigo-500' :
+                  index < currentFactIndex ? 'bg-green-500' : 'bg-gray-300'
+                }`}
+              />
+            ))}
+          </div>
 
-          {/* Feedback (brief) */}
-          {showFeedback ? (
-            <div className={`text-center mb-3 text-3xl ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-              {isCorrect ? '✓' : '✗'}
+          {/* Current question with inline feedback */}
+          <div className={`text-center mb-4 p-4 rounded-xl transition-all ${
+            showFeedback 
+              ? isCorrect 
+                ? 'bg-green-200' 
+                : 'bg-red-200'
+              : 'bg-gray-50'
+          }`}>
+            <div className="flex items-center justify-center gap-3">
+              <span className={`text-5xl font-bold ${
+                showFeedback && isCorrect ? 'text-green-800' : 
+                showFeedback && !isCorrect ? 'text-red-800' : 'text-gray-800'
+              }`}>
+                {currentFact.operand1} + {currentFact.operand2} = {showFeedback ? currentFact.result : (answer || '?')}
+              </span>
+              {showFeedback && (
+                <span className={`text-4xl ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                  {isCorrect ? '✓' : '✗'}
+                </span>
+              )}
             </div>
-          ) : null}
+          </div>
 
-          {/* Number pad */}
-          {!showFeedback && (
-            <>
-              <NumberPad value={answer} onChange={setAnswer} />
-              
-              <button
-                onClick={handleSubmit}
-                disabled={!answer}
-                className="w-full mt-3 bg-indigo-500 hover:bg-indigo-600 disabled:bg-gray-400 text-white text-xl font-bold py-4 rounded-xl transition shadow-lg"
-              >
-                Submit
-              </button>
-            </>
-          )}
+          {/* Number pad - always visible, no display */}
+          <NumberPad value={answer} onChange={setAnswer} maxValue={20} hideDisplay />
         </div>
       </div>
     </div>

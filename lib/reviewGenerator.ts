@@ -1,10 +1,10 @@
 /**
  * Generate review questions with weighted selection
  * 
- * NEW RULES (per client feedback):
+ * RULES:
  * - 20 questions total
- * - Only straight quiz questions (no turnaround questions)
- * - From all previous lessons
+ * - 10 from current lesson's fact family/series duo (repetitions allowed)
+ * - 10 from previous lessons
  * - Weighted toward 6-9 facts (heavily)
  * - Random order
  */
@@ -19,16 +19,24 @@ export interface ReviewQuestion {
 }
 
 /**
- * Generate 20 straight quiz questions from previous lessons
- * Weighted heavily toward facts with 6-9
+ * Generate 20 questions: 10 from current lesson, 10 from previous lessons
  */
 export function generateReviewQuestions(currentLesson: Lesson): ReviewQuestion[] {
-  const totalQuestions = 20;
-  
   const reviewQuestions: ReviewQuestion[] = [];
-  const usedFactIds = new Set<string>();  // Prevent duplicates
   
-  // Get ALL facts from all previous lessons
+  // PART 1: 10 questions from current lesson (repetitions allowed)
+  const currentLessonFacts = currentLesson.facts.map(f => ({ ...f, lessonId: currentLesson.id }));
+  
+  for (let i = 0; i < 10; i++) {
+    const randomFact = currentLessonFacts[Math.floor(Math.random() * currentLessonFacts.length)];
+    reviewQuestions.push({
+      fact: randomFact,
+      isFromCurrentLesson: true,
+      sourceLesson: currentLesson.id
+    });
+  }
+  
+  // PART 2: 10 questions from previous lessons
   const previousLessons = lessons.filter(l => l.id < currentLesson.id);
   
   const allPreviousFacts: Fact[] = [];
@@ -38,10 +46,11 @@ export function generateReviewQuestions(currentLesson: Lesson): ReviewQuestion[]
     });
   });
   
-  // Select 20 questions with heavy weighting toward 6-9
-  const selected = selectUniqueRandom(allPreviousFacts, totalQuestions, usedFactIds);
-  
-  reviewQuestions.push(...selected.map(fact => ({
+  // Select 10 from previous lessons with weighting (duplicates okay for early lessons with few facts)
+  const usedFactIds = new Set<string>();
+  const previousSelected = selectWithWeight(allPreviousFacts, 10, usedFactIds);
+    
+  reviewQuestions.push(...previousSelected.map(fact => ({
     fact,
     isFromCurrentLesson: false,
     sourceLesson: fact.lessonId!
@@ -74,23 +83,31 @@ function applyHighNumberWeighting(facts: Fact[]): Fact[] {
 }
 
 /**
- * Select N random items from array, ensuring no duplicates by factId
+ * Select N random items from array with weighting
+ * Tries to avoid duplicates but allows them if not enough unique facts
  */
-function selectUniqueRandom(arr: Fact[], count: number, usedIds: Set<string>): Fact[] {
+function selectWithWeight(arr: Fact[], count: number, usedIds: Set<string>): Fact[] {
+  if (arr.length === 0) return [];
+  
   // Apply weighting first
   const weighted = applyHighNumberWeighting(arr);
   const shuffled = shuffleArray(weighted);
   
   const selected: Fact[] = [];
   
+  // First pass: try to get unique facts
   for (const fact of shuffled) {
     if (selected.length >= count) break;
-    
-    // Skip if already used
     if (usedIds.has(fact.id)) continue;
     
     selected.push(fact);
     usedIds.add(fact.id);
+  }
+  
+  // Second pass: if not enough, allow repeats
+  while (selected.length < count && arr.length > 0) {
+    const randomFact = weighted[Math.floor(Math.random() * weighted.length)];
+    selected.push(randomFact);
   }
   
   return selected;

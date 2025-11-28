@@ -164,7 +164,11 @@ export function getInstructionAudio(key: string): AudioFile {
     // Plus 0 rule (3 parts)
     'plus-zero-rule-part1': 'Here\'s a rule for plus 0 facts. When you plus zero, the number stays the same.',
     'plus-zero-rule-part2': '2+0 = 2 because when you add zero, nothing changes.',
-    'plus-zero-rule-part3': 'Remember the rule: When you plus zero, the number stays the same.'
+    'plus-zero-rule-part3': 'Remember the rule: When you plus zero, the number stays the same.',
+    // Quiz
+    'quiz-time': 'Quiz time! Type the answer for each fact.',
+    // Step 3 cue
+    'read-fact-answer': 'Read the fact and answer it.'
   };
   
   return {

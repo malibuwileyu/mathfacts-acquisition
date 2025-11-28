@@ -8,7 +8,7 @@
 'use client';
 
 import { Lesson, Fact } from '@/types';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAudio, getFactAudio, getInstructionAudio } from '@/lib/useAudio';
 import NumberPad from '@/components/shared/NumberPad';
 
@@ -41,8 +41,12 @@ export default function FFStep3Guided({ lesson, onComplete }: Props) {
   const { playAudio } = useAudio();
 
   const currentFact = allFacts[currentFactIndex];
+  
+  // Determine expected digits for auto-submit
+  const expectedDigits = currentFact.result < 10 ? 1 : 2;
 
   const handleSubmit = async () => {
+    if (!answer || showFeedback) return;
     const userAnswer = parseInt(answer);
     const correct = userAnswer === currentFact.result;
     
@@ -66,6 +70,13 @@ export default function FFStep3Guided({ lesson, onComplete }: Props) {
       }
     }, 1500);
   };
+
+  // Auto-submit when answer is complete
+  useEffect(() => {
+    if (answer.length === expectedDigits && !showFeedback) {
+      handleSubmit();
+    }
+  }, [answer]);
 
   return (
     <div className="h-full p-3 flex flex-col justify-center">
@@ -93,17 +104,7 @@ export default function FFStep3Guided({ lesson, onComplete }: Props) {
 
           {/* Number pad */}
           {!showFeedback && (
-            <>
-              <NumberPad value={answer} onChange={setAnswer} />
-              
-              <button
-                onClick={handleSubmit}
-                disabled={!answer}
-                className="w-full mt-3 bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white text-xl font-bold py-4 rounded-xl transition shadow-lg"
-              >
-                Submit
-              </button>
-            </>
+            <NumberPad value={answer} onChange={setAnswer} maxValue={20} />
           )}
         </div>
       </div>

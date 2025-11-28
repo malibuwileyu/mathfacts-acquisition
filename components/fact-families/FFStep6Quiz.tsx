@@ -58,7 +58,7 @@ export default function FFStep6Quiz({ lesson, onComplete }: Props) {
     
     return questions;
   });
-  
+
   const currentQuestion = quizQuestions[currentQuestionIndex];
   const currentFact = currentQuestion?.fact;
   
@@ -91,16 +91,16 @@ export default function FFStep6Quiz({ lesson, onComplete }: Props) {
       if (!answer) return;
       const userAnswer = parseInt(answer);
       const correct = userAnswer === currentFact.result;
-      
-      setIsCorrect(correct);
-      setShowFeedback(true);
+    
+    setIsCorrect(correct);
+    setShowFeedback(true);
 
-      const newAnswers = [...answers, { factId: currentFact.id, correct }];
-      setAnswers(newAnswers);
+    const newAnswers = [...answers, { factId: currentFact.id, correct }];
+    setAnswers(newAnswers);
 
-      setTimeout(() => {
-        setShowFeedback(false);
-        setAnswer('');
+    setTimeout(() => {
+      setShowFeedback(false);
+      setAnswer('');
         
         if (currentQuestionIndex < quizQuestions.length - 1) {
           setCurrentQuestionIndex(currentQuestionIndex + 1);
@@ -163,15 +163,15 @@ export default function FFStep6Quiz({ lesson, onComplete }: Props) {
 
         setTimeout(() => {
           resetQuestion();
-          
-          if (currentQuestionIndex < quizQuestions.length - 1) {
-            setCurrentQuestionIndex(currentQuestionIndex + 1);
-          } else {
-            const correctCount = newAnswers.filter(a => a.correct).length;
-            const score = Math.round((correctCount / newAnswers.length) * 100);
-            onComplete(score);
-          }
-        }, 1000);
+      
+      if (currentQuestionIndex < quizQuestions.length - 1) {
+        setCurrentQuestionIndex(currentQuestionIndex + 1);
+      } else {
+        const correctCount = newAnswers.filter(a => a.correct).length;
+        const score = Math.round((correctCount / newAnswers.length) * 100);
+        onComplete(score);
+      }
+    }, 1000);
       }
     }
   };
@@ -213,7 +213,7 @@ export default function FFStep6Quiz({ lesson, onComplete }: Props) {
             <div className="text-sm text-gray-600 mb-1">
               Question {currentQuestionIndex + 1} of {quizQuestions.length}
             </div>
-          </div>
+            </div>
             
           {/* Question content with inline feedback */}
           <div className={`text-center mb-3 p-6 rounded-xl transition-all ${
@@ -286,11 +286,11 @@ export default function FFStep6Quiz({ lesson, onComplete }: Props) {
 
           {/* Number pad */}
           {!showFeedback && (
-            <NumberPad 
+              <NumberPad 
               value={currentQuestion.type === 'sum' ? answer : (operandsConfirmed ? sumAnswer : '')}
-              onChange={(val) => {
-                if (currentQuestion.type === 'sum') {
-                  setAnswer(val);
+                onChange={(val) => {
+                  if (currentQuestion.type === 'sum') {
+                    setAnswer(val);
                 } else {
                   // Turnaround question
                   if (operandsConfirmed) {
@@ -310,10 +310,10 @@ export default function FFStep6Quiz({ lesson, onComplete }: Props) {
                         setAnswer2(val);
                       }
                     }
+                    }
                   }
-                }
-              }}
-            />
+                }}
+              />
           )}
         </div>
       </div>

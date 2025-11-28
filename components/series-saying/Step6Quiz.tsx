@@ -39,6 +39,9 @@ export default function Step6Quiz({ lesson, onComplete }: Props) {
   );
 
   const currentFact = orderedFacts[currentQuestionIndex];
+  
+  // Determine expected digits for auto-submit
+  const expectedDigits = currentFact.result < 10 ? 1 : 2;
 
   useEffect(() => {
     // Play question audio when question changes
@@ -51,6 +54,7 @@ export default function Step6Quiz({ lesson, onComplete }: Props) {
   };
 
   const handleSubmit = () => {
+    if (!answer || showFeedback) return;
     const userAnswer = parseInt(answer);
     const correct = userAnswer === currentFact.result;
     const timeSpent = Date.now() - questionStartTime;
@@ -86,6 +90,13 @@ export default function Step6Quiz({ lesson, onComplete }: Props) {
     }, 1500);
   };
 
+  // Auto-submit when answer is complete
+  useEffect(() => {
+    if (answer.length === expectedDigits && !showFeedback) {
+      handleSubmit();
+    }
+  }, [answer]);
+
   return (
     <div className="h-full p-3 flex flex-col justify-center">
       <div className="max-w-md w-full mx-auto">
@@ -113,17 +124,7 @@ export default function Step6Quiz({ lesson, onComplete }: Props) {
 
           {/* Number pad */}
           {!showFeedback && (
-            <>
-              <NumberPad value={answer} onChange={setAnswer} />
-              
-              <button
-                onClick={handleSubmit}
-                disabled={!answer}
-                className="w-full mt-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white text-xl font-bold py-4 rounded-xl transition shadow-lg"
-              >
-                Submit
-              </button>
-            </>
+            <NumberPad value={answer} onChange={setAnswer} maxValue={20} />
           )}
         </div>
       </div>

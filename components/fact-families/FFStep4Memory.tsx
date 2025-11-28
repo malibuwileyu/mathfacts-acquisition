@@ -41,6 +41,9 @@ export default function FFStep4Memory({ lesson, onComplete }: Props) {
   const { playAudio } = useAudio();
 
   const currentFact = allFacts[currentFactIndex];
+  
+  // Determine expected digits for auto-submit
+  const expectedDigits = currentFact.result < 10 ? 1 : 2;
 
   useEffect(() => {
     if (!hasHeard) {
@@ -50,6 +53,7 @@ export default function FFStep4Memory({ lesson, onComplete }: Props) {
   }, [currentFactIndex]);
 
   const handleSubmit = async () => {
+    if (!answer || showFeedback) return;
     const userAnswer = parseInt(answer);
     const correct = userAnswer === currentFact.result;
     
@@ -68,6 +72,13 @@ export default function FFStep4Memory({ lesson, onComplete }: Props) {
       }
     }, 1000);
   };
+
+  // Auto-submit when answer is complete
+  useEffect(() => {
+    if (answer.length === expectedDigits && !showFeedback) {
+      handleSubmit();
+    }
+  }, [answer]);
 
   return (
     <div className="h-full p-3 flex flex-col justify-center">
@@ -92,17 +103,7 @@ export default function FFStep4Memory({ lesson, onComplete }: Props) {
 
           {/* Number pad */}
           {!showFeedback && (
-            <>
-              <NumberPad value={answer} onChange={setAnswer} />
-              
-              <button
-                onClick={handleSubmit}
-                disabled={!answer}
-                className="w-full mt-3 bg-indigo-500 hover:bg-indigo-600 disabled:bg-gray-400 text-white text-xl font-bold py-4 rounded-xl transition shadow-lg"
-              >
-                Submit
-              </button>
-            </>
+            <NumberPad value={answer} onChange={setAnswer} maxValue={20} />
           )}
         </div>
       </div>

@@ -49,9 +49,9 @@ export default function Step2GuidedA({ lesson, onComplete }: Props) {
       const audioFile = getFactAudio(fact.id, 'statement');
     await playAudio(audioFile);
     
-      // "Your turn to read it" cue
-    await new Promise(r => setTimeout(r, 300));
-      await playAudio(getInstructionAudio('your-turn-read-it'));
+      // "Your turn to read it" for first, "Your turn" for rest
+      await new Promise(r => setTimeout(r, 300));
+      await playAudio(getInstructionAudio(i === 0 ? 'your-turn-read-it' : 'your-turn'));
       
       // Give student time to say it (pause)
       await new Promise(r => setTimeout(r, 2000));
