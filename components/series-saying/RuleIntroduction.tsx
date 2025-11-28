@@ -102,22 +102,41 @@ export default function RuleIntroduction({ ruleType, onComplete }: Props) {
             {isPlusOne ? 'Plus 1 Rule' : 'Plus 0 Rule'}
           </h2>
 
-          {/* Example equation */}
+          {/* Example equation with arrow from operand to sum */}
           <div className="text-center mb-12">
-            <div className="text-8xl font-bold text-gray-800 mb-4">
-              {example.operand1} + {example.operand2} = {example.result}
-            </div>
-
-            {/* Arrow appears when audio says "because [result]" */}
-            <div className={`transition-all duration-500 ${showArrow ? 'opacity-100' : 'opacity-0'}`}>
-              <div className="flex flex-col items-center">
-                <div className="text-6xl text-blue-500 mb-2">↑</div>
-                <div className="text-3xl font-semibold text-gray-700">
-                  {isPlusOne 
-                    ? `The next number after ${example.operand1}`
-                    : 'The number stays the same'
-                  }
-                </div>
+            <div className="relative inline-block">
+              {/* The equation */}
+              <div className="text-8xl font-bold text-gray-800 flex items-center justify-center gap-4">
+                <span>{example.operand1}</span>
+                <span>+</span>
+                <span>{example.operand2}</span>
+                <span>=</span>
+                <span>{example.result}</span>
+              </div>
+              
+              {/* Curved arrow below the equation from operand1 to result */}
+              <div className={`transition-all duration-500 ${showArrow ? 'opacity-100' : 'opacity-0'}`}>
+                <svg 
+                  className="absolute top-full left-0 w-full h-16 -mt-2" 
+                  viewBox="0 0 400 60" 
+                  fill="none"
+                  preserveAspectRatio="xMidYMid meet"
+                >
+                  {/* Curved path from operand1 to result */}
+                  <path 
+                    d="M 50 10 Q 200 70 350 10" 
+                    stroke="#3B82F6" 
+                    strokeWidth="4" 
+                    fill="none"
+                    strokeLinecap="round"
+                  />
+                  {/* Arrowhead - rotated to follow curve */}
+                  <polygon 
+                    points="345,2 355,10 345,18" 
+                    fill="#3B82F6"
+                    transform="rotate(-20, 350, 10)"
+                  />
+                </svg>
               </div>
             </div>
           </div>

@@ -35,6 +35,11 @@ export default function Step3TypeSums({ lesson, onComplete }: Props) {
   // Determine expected number of digits
   const expectedDigits = currentFact.result < 10 ? 1 : 2;
 
+  // Play instruction cue on mount
+  useEffect(() => {
+    playAudio(getInstructionAudio('read-fact-answer'));
+  }, []);
+
   const handleSubmit = async () => {
     if (!answer) return;
     

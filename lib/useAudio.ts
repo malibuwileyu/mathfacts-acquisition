@@ -166,7 +166,9 @@ export function getInstructionAudio(key: string): AudioFile {
     'plus-zero-rule-part2': '2+0 = 2 because when you add zero, nothing changes.',
     'plus-zero-rule-part3': 'Remember the rule: When you plus zero, the number stays the same.',
     // Quiz
-    'quiz-time': 'Quiz time! Type the answer for each fact.'
+    'quiz-time': 'Quiz time! Type the answer for each fact.',
+    // Step 3 cue
+    'read-fact-answer': 'Read the fact and answer it.'
   };
   
   return {

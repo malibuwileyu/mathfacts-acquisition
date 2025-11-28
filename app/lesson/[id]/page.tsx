@@ -218,15 +218,22 @@ export default function LessonPage() {
               </h2>
             </div>
             <span className="text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-700 font-semibold">
-              {`${currentStep}/${maxSteps}`}
+              {(() => {
+                const hasRule = [1, 3, 15].includes(lessonId);
+                const displayCurrent = hasRule && currentStep > 1 ? currentStep - 1 : currentStep;
+                const displayMax = hasRule ? maxSteps - 1 : maxSteps;
+                return currentStep === 2 && hasRule ? `R/${displayMax}` : `${displayCurrent}/${displayMax}`;
+              })()}
             </span>
           </div>
           
-          {/* Compact step indicators */}
+          {/* Compact step indicators: 1, R, 2, 3, 4, 5, 6 for rule lessons */}
           <div className="flex justify-center gap-2">
             {Array.from({ length: maxSteps }, (_, i) => i + 1).map((step) => {
-              const isRuleStep = [1, 3, 15].includes(lessonId) && step === 2;
-              const displayStep = isRuleStep ? 'R' : step;
+              const hasRule = [1, 3, 15].includes(lessonId);
+              const isRuleStep = hasRule && step === 2;
+              // For rule lessons: 1, R, 2, 3, 4, 5, 6 (not 1, R, 3, 4, 5, 6, 7)
+              const displayStep = isRuleStep ? 'R' : (hasRule && step > 2 ? step - 1 : step);
               
               return (
               <div

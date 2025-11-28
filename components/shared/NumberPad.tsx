@@ -12,9 +12,10 @@ interface Props {
   value: string;
   onChange: (value: string) => void;
   maxValue?: number;
+  hideDisplay?: boolean;
 }
 
-export default function NumberPad({ value, onChange, maxValue = 20 }: Props) {
+export default function NumberPad({ value, onChange, maxValue = 20, hideDisplay = false }: Props) {
   const handleNumberClick = (num: number) => {
     const newValue = value + num.toString();
     if (parseInt(newValue) <= maxValue) {
@@ -30,12 +31,14 @@ export default function NumberPad({ value, onChange, maxValue = 20 }: Props) {
 
   return (
     <div className="w-full max-w-sm mx-auto">
-      {/* Display */}
-      <div className="bg-gray-100 rounded-lg p-3 mb-2 text-center">
-        <div className="text-4xl font-bold text-gray-800 h-12 flex items-center justify-center">
-          {value || '_'}
+      {/* Display - can be hidden when answer shows elsewhere */}
+      {!hideDisplay && (
+        <div className="bg-gray-100 rounded-lg p-3 mb-2 text-center">
+          <div className="text-4xl font-bold text-gray-800 h-12 flex items-center justify-center">
+            {value || '_'}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Number grid */}
       <div className="grid grid-cols-3 gap-2 mb-2">

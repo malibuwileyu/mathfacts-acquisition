@@ -123,90 +123,47 @@ export default function Step4GuidedB({ lesson, onComplete }: Props) {
 
   return (
     <div className="h-full p-3 flex flex-col justify-center">
-      <div className="max-w-4xl w-full mx-auto">
+      <div className="max-w-md w-full mx-auto">
         <div className="bg-white rounded-xl shadow-xl p-6">
           
-          <div className="flex gap-4 items-start">
-            {/* Left side: All facts in compact 2-column grid */}
-            <div className="flex-shrink-0">
-              <div className="grid grid-cols-2 gap-2 mb-2">
-                {lesson.facts.map((fact, index) => (
-                  <div
-                    key={fact.id}
-                    className={`text-center px-4 py-2 rounded-lg transition-all text-xl font-bold ${
-                      index === currentFactIndex
-                        ? 'bg-orange-500 text-white shadow-lg scale-105'
-                        : index < currentFactIndex
-                        ? 'bg-green-200 text-green-900'
-                        : 'bg-gray-300 text-gray-900'
-                    }`}
-                  >
-                    {fact.operand1}+{fact.operand2}={fact.result}
-                  </div>
-                ))}
-              </div>
+          {/* Progress dots at top */}
+          <div className="flex justify-center gap-2 mb-4">
+            {lesson.facts.map((_, index) => (
+              <div
+                key={index}
+                className={`w-3 h-3 rounded-full ${
+                  index === currentFactIndex ? 'bg-orange-500' :
+                  index < currentFactIndex ? 'bg-green-500' : 'bg-gray-300'
+                }`}
+              />
+            ))}
+          </div>
 
-              {/* Progress dots */}
-              <div className="flex justify-center gap-1">
-                {lesson.facts.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`w-2 h-2 rounded-full ${
-                      index === currentFactIndex ? 'bg-orange-500' :
-                      index < currentFactIndex ? 'bg-green-500' : 'bg-gray-400'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Right side: Current question + number pad */}
-            <div className="flex-1">
-              {/* Current question with inline feedback */}
-              <div className={`text-center mb-4 p-4 rounded-xl transition-all ${
-                showFeedback 
-                  ? isCorrect 
-                    ? 'bg-green-100' 
-                    : 'bg-red-100'
-                  : 'bg-gray-50'
+          {/* Current question with inline feedback */}
+          <div className={`text-center mb-4 p-4 rounded-xl transition-all ${
+            showFeedback 
+              ? isCorrect 
+                ? 'bg-green-200' 
+                : 'bg-red-200'
+              : 'bg-gray-50'
+          }`}>
+            <div className="flex items-center justify-center gap-3">
+              <span className={`text-5xl font-bold ${
+                showFeedback && isCorrect ? 'text-green-800' : 
+                showFeedback && !isCorrect ? 'text-red-800' : 'text-gray-800'
               }`}>
-                <div className="text-5xl font-bold text-gray-800 mb-2">
-                  {currentFact.operand1} + {currentFact.operand2} = {showFeedback ? currentFact.result : '?'}
-                </div>
-                
-                {/* Show feedback inline */}
-                {showFeedback && (
-                  <div className="mt-3">
-                    {isCorrect ? (
-                      <div className="flex flex-col items-center gap-1">
-                        <div className="text-5xl text-green-600">✓</div>
-                        <div className="text-xl font-bold text-green-700">Correct!</div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center gap-1">
-                        <div className="text-5xl text-red-600">✗</div>
-                        <div className="text-lg text-red-700">
-                          {currentFact.operand1} + {currentFact.operand2} = {currentFact.result}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                {/* Show user's answer while typing */}
-                {!showFeedback && answer && (
-                  <div className="text-4xl font-bold text-orange-600 mt-2">
-                    {answer}
-                  </div>
-                )}
-              </div>
-
-          {/* Number pad */}
-          {!showFeedback && (
-              <NumberPad value={answer} onChange={setAnswer} maxValue={20} />
+                {currentFact.operand1} + {currentFact.operand2} = {showFeedback ? currentFact.result : (answer || '?')}
+              </span>
+              {showFeedback && (
+                <span className={`text-4xl ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                  {isCorrect ? '✓' : '✗'}
+                </span>
               )}
             </div>
           </div>
+
+          {/* Number pad - always visible, no display since answer shows in equation */}
+          <NumberPad value={answer} onChange={setAnswer} maxValue={20} hideDisplay />
         </div>
       </div>
     </div>
