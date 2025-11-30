@@ -20,7 +20,6 @@ interface Props {
 }
 
 export default function Step4GuidedB({ lesson, onComplete }: Props) {
-  const [showIntro, setShowIntro] = useState(true);
   const [currentFactIndex, setCurrentFactIndex] = useState(0);
   const [answer, setAnswer] = useState('');
   const [showFeedback, setShowFeedback] = useState(false);
@@ -28,12 +27,10 @@ export default function Step4GuidedB({ lesson, onComplete }: Props) {
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
   const { playAudio } = useAudio();
   
-  // Play quiz intro audio when shown
+  // Play instruction audio on mount
   useEffect(() => {
-    if (showIntro) {
-      playAudio(getInstructionAudio('quiz-time'));
-    }
-  }, [showIntro]);
+    playAudio(getInstructionAudio('type-answer-for-each-fact'));
+  }, []);
 
   const currentFact = lesson.facts[currentFactIndex];
   
@@ -94,32 +91,6 @@ export default function Step4GuidedB({ lesson, onComplete }: Props) {
       onComplete();
     }
   };
-
-  // Quiz intro screen
-  if (showIntro) {
-    return (
-      <div className="h-full p-3 flex flex-col justify-center items-center">
-        <div className="max-w-md w-full mx-auto">
-          <div className="bg-white rounded-xl shadow-xl p-8 text-center">
-            <div className="text-6xl mb-4">📝</div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">Quiz Time!</h2>
-            <p className="text-xl text-gray-600 mb-6">
-              Type the answer for each fact.
-            </p>
-            <button
-              onClick={() => {
-                setShowIntro(false);
-                setQuestionStartTime(Date.now());
-              }}
-              className="bg-orange-500 hover:bg-orange-600 text-white text-2xl font-bold py-4 px-8 rounded-xl transition-colors"
-            >
-              Start Quiz
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="h-full p-3 flex flex-col justify-center">

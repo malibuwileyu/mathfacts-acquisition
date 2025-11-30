@@ -41,7 +41,7 @@ export default function FFStep4Memory({ lesson, onComplete }: Props) {
   const { playAudio } = useAudio();
 
   const currentFact = allFacts[currentFactIndex];
-  
+
   // Determine expected digits for auto-submit
   const expectedDigits = currentFact.result < 10 ? 1 : 2;
 
@@ -85,26 +85,42 @@ export default function FFStep4Memory({ lesson, onComplete }: Props) {
       <div className="max-w-md w-full mx-auto">
         <div className="bg-white rounded-xl shadow-xl p-5">
           
-          {/* Answer display */}
-          {answer && (
-            <div className="text-center mb-3">
-              <div className="text-5xl font-bold text-indigo-600">
-                {answer}
-              </div>
+          {/* Progress dots */}
+          <div className="flex justify-center gap-2 mb-4">
+            {allFacts.map((_, index) => (
+              <div
+                key={index}
+                className={`w-3 h-3 rounded-full ${
+                  index === currentFactIndex ? 'bg-indigo-500' :
+                  index < currentFactIndex ? 'bg-green-500' : 'bg-gray-300'
+                }`}
+              />
+            ))}
             </div>
-          )}
 
-          {/* Feedback */}
-          {showFeedback ? (
-            <div className={`text-center mb-2 text-3xl ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+          {/* Equation with inline feedback */}
+          <div className={`text-center mb-4 p-4 rounded-xl transition-all ${
+            showFeedback 
+              ? isCorrect ? 'bg-green-200' : 'bg-red-200'
+              : 'bg-gray-50'
+          }`}>
+            <div className="flex items-center justify-center gap-3">
+              <span className={`text-5xl font-bold ${
+                showFeedback && isCorrect ? 'text-green-800' : 
+                showFeedback && !isCorrect ? 'text-red-800' : 'text-gray-800'
+              }`}>
+                {currentFact.operand1} + {currentFact.operand2} = {showFeedback ? currentFact.result : (answer || '?')}
+              </span>
+              {showFeedback && (
+                <span className={`text-4xl ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
               {isCorrect ? '✓' : '✗'}
+                </span>
+              )}
             </div>
-          ) : null}
+          </div>
 
-          {/* Number pad */}
-          {!showFeedback && (
-            <NumberPad value={answer} onChange={setAnswer} maxValue={20} />
-          )}
+          {/* Number pad - always visible */}
+          <NumberPad value={answer} onChange={setAnswer} maxValue={20} hideDisplay />
         </div>
       </div>
     </div>

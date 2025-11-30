@@ -8,7 +8,7 @@
 'use client';
 
 import { Lesson } from '@/types';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAudio, getFactAudio } from '@/lib/useAudio';
 
 interface Props {
@@ -21,6 +21,7 @@ export default function FFStep1Introduce({ lesson, onComplete }: Props) {
   const [hasHeard, setHasHeard] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const { playAudio } = useAudio();
+  const hasStartedRef = useRef(false);
 
   const currentPair = lesson.commutativePairs![currentPairIndex];
   const fact1 = lesson.facts.find(f => f.id === currentPair[0])!;
@@ -29,12 +30,33 @@ export default function FFStep1Introduce({ lesson, onComplete }: Props) {
   const [a, b] = currentPair[1].split('+').map(Number);
   const fact2 = { id: currentPair[1], operand1: a, operand2: b, result: a + b, display: `${a} + ${b}` };
 
-  const handleListenCurrent = async () => {
+  // Auto-play when pair changes
+  useEffect(() => {
+    if (hasStartedRef.current && currentPairIndex > 0) {
+      // Auto-play for subsequent pairs
+      playCurrentPair();
+    } else if (!hasStartedRef.current) {
+      // First pair - auto-start after short delay
+      hasStartedRef.current = true;
+      const timer = setTimeout(() => {
+        playCurrentPair();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [currentPairIndex]);
+
+  const playCurrentPair = async () => {
     setIsPlaying(true);
+    setHasHeard(false);
     
-    await playAudio(getFactAudio(fact1.id, 'statement'));
+    // Get current pair facts
+    const pair = lesson.commutativePairs![currentPairIndex];
+    const f1 = lesson.facts.find(f => f.id === pair[0])!;
+    const [pa, pb] = pair[1].split('+').map(Number);
+    
+    await playAudio(getFactAudio(f1.id, 'statement'));
     await new Promise(r => setTimeout(r, 500));
-    await playAudio(getFactAudio(fact2.id, 'statement'));
+    await playAudio(getFactAudio(pair[1], 'statement'));
     await new Promise(r => setTimeout(r, 500));
     
     // Reinforcement message ONLY on first pair
@@ -46,51 +68,13 @@ export default function FFStep1Introduce({ lesson, onComplete }: Props) {
     }
     
     setIsPlaying(false);
-    
-    // Wait before showing button (let student process)
-    await new Promise(r => setTimeout(r, 3000));
     setHasHeard(true);
-    
-    // Auto-advance to next pair or complete
-    await new Promise(r => setTimeout(r, 2000));
-    if (currentPairIndex < lesson.commutativePairs!.length - 1) {
-      setCurrentPairIndex(currentPairIndex + 1);
-      setHasHeard(false);
-    }
-    // If at last pair, Next Step button stays visible
   };
 
-  const handleListenAll = async () => {
-    setIsPlaying(true);
-    setCurrentPairIndex(0);
-    
-    for (let i = 0; i < lesson.commutativePairs!.length; i++) {
-      setCurrentPairIndex(i);
-      
-      const pair = lesson.commutativePairs![i];
-      const f1 = lesson.facts.find(f => f.id === pair[0])!;
-      const [a1, b1] = pair[1].split('+').map(Number);
-      
-      await playAudio(getFactAudio(f1.id, 'statement'));
-      await new Promise(r => setTimeout(r, 500));
-      await playAudio(getFactAudio(pair[1], 'statement'));
-      await new Promise(r => setTimeout(r, 500));
-      
-      // Reinforcement message ONLY on first pair
-      if (i === 0) {
-        await playAudio({
-          filename: 'instructions/fact-family.mp3',
-          text: `They have the same sum. They're a fact family!`
-        });
-        await new Promise(r => setTimeout(r, 500));
-      }
-      
-      await new Promise(r => setTimeout(r, 1500));
+  const handleReplay = () => {
+    if (!isPlaying) {
+      playCurrentPair();
     }
-    
-    setCurrentPairIndex(lesson.commutativePairs!.length - 1);
-    setIsPlaying(false);
-    setHasHeard(true);
   };
 
   const handleNext = () => {
@@ -119,44 +103,34 @@ export default function FFStep1Introduce({ lesson, onComplete }: Props) {
             <div className="text-6xl font-bold text-purple-600 mb-4 text-center">
               {fact1.operand1} + {fact1.operand2} = {fact1.result}
             </div>
-            <div className="text-3xl text-gray-500 mb-4 text-center">
-              ↕️
-            </div>
-            <div className="text-6xl font-bold text-pink-600 mb-4 text-center">
+            <div className="text-6xl font-bold text-pink-600 text-center">
               {fact2.operand1} + {fact2.operand2} = {fact2.result}
             </div>
-            <div className="text-2xl font-bold text-green-600 text-center">
-              Same sum!
-            </div>
           </div>
 
-          {/* Controls */}
-          <div className="space-y-3">
-            <button
-              onClick={handleListenCurrent}
-              disabled={isPlaying}
-              className="w-full bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white text-2xl font-bold py-5 rounded-xl transition shadow-lg"
-            >
-              🔊 Hear This Pair
-            </button>
+          {/* Controls - only show after audio finishes */}
+          {hasHeard && (
+            <div className="flex gap-4 justify-center">
+              {/* Replay button (blue microphone) */}
+              <button
+                onClick={handleReplay}
+                disabled={isPlaying}
+                className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white text-3xl font-bold p-5 rounded-xl transition shadow-lg"
+                title="Hear Again"
+              >
+                🎤
+              </button>
 
-            <button
-              onClick={handleListenAll}
-              disabled={isPlaying}
-              className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white text-2xl font-bold py-5 rounded-xl transition shadow-lg"
-            >
-              🔊 Hear All Families
-            </button>
-
-            {hasHeard && (
+              {/* Advance button (green arrow) */}
               <button
                 onClick={handleNext}
-                className="w-full bg-green-500 hover:bg-green-600 text-white text-2xl font-bold py-5 rounded-xl transition shadow-lg"
+                className="flex-1 bg-green-500 hover:bg-green-600 text-white text-5xl font-bold py-5 px-8 rounded-xl transition shadow-lg flex items-center justify-center"
               >
-                {currentPairIndex < lesson.commutativePairs!.length - 1 ? 'Next Pair →' : 'Next Step →'}
+                →
               </button>
-            )}
-          </div>
+            </div>
+          )}
+
         </div>
       </div>
     </div>

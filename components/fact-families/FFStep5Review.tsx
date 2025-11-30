@@ -97,45 +97,42 @@ export default function FFStep5Review({ lesson, onComplete }: Props) {
       <div className="max-w-xl w-full mx-auto">
         <div className="bg-white rounded-xl shadow-xl p-8">
           
-          {/* Lined-up equations with blank (reduced 10%) */}
-          <div className="bg-teal-50 rounded-xl p-6 mb-3">
+          {/* Lined-up equations with inline feedback */}
+          <div className={`rounded-xl p-6 mb-3 transition-all ${
+            showFeedback 
+              ? isCorrect ? 'bg-green-100' : 'bg-red-100'
+              : 'bg-teal-50'
+          }`}>
             {/* First fact */}
-            <div className="text-6xl font-bold text-teal-600 text-center mb-6 font-mono">
+            <div className="text-5xl font-bold text-teal-600 text-center mb-4 font-mono">
               {fact1.operand1} + {fact1.operand2} = {fact1.result}
             </div>
             
-            {/* Second fact with blank second addend */}
-            <div className="text-6xl font-bold text-teal-600 flex items-center justify-center gap-3 font-mono">
-              <span>{turnA}</span>
-              <span>+</span>
-              {answer ? (
-                <span className={isCorrect ? 'text-green-600' : 'text-red-600'}>{answer}</span>
-              ) : (
-                <div className="border-b-8 border-gray-400 w-20 h-16 flex items-center justify-center text-gray-400">
-                  ?
-                </div>
+            {/* Second fact with answer and inline checkmark */}
+            <div className="flex items-center justify-center gap-2">
+              <span className={`text-5xl font-bold font-mono ${
+                showFeedback && isCorrect ? 'text-green-700' : 
+                showFeedback && !isCorrect ? 'text-red-700' : 'text-teal-600'
+              }`}>
+                {turnA} + {answer || '?'} = {fact1.result}
+              </span>
+              {showFeedback && (
+                <span className={`text-4xl ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                  {isCorrect ? '✓' : '✗'}
+                </span>
               )}
-              <span>=</span>
-              <span>{fact1.result}</span>
             </div>
           </div>
 
-          {/* Feedback */}
-          {showFeedback ? (
-            <div className={`text-center mb-2 text-2xl ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-              {isCorrect ? '✓' : '✗'}
-            </div>
-          ) : null}
-
-          {/* Number pad - only enabled after "complete" instruction */}
-          {!showFeedback && canType && (
-            <NumberPad value={answer} onChange={setAnswer} maxValue={20} />
+          {/* Number pad - always visible when can type */}
+          {canType && (
+            <NumberPad value={answer} onChange={setAnswer} maxValue={20} hideDisplay />
           )}
           
           {/* Waiting message before number pad enabled */}
-          {!showFeedback && !canType && (
-            <div className="text-center text-xl text-gray-500 animate-pulse py-8">
-              Listen...
+          {!canType && (
+            <div className="text-center text-2xl text-purple-600 font-semibold py-8">
+              🔊 Listen...
             </div>
           )}
         </div>
@@ -143,4 +140,5 @@ export default function FFStep5Review({ lesson, onComplete }: Props) {
     </div>
   );
 }
+
 

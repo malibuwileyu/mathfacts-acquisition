@@ -9,7 +9,7 @@
 
 import { Lesson, Fact } from '@/types';
 import { useState, useEffect } from 'react';
-import { useAudio, getFactAudio } from '@/lib/useAudio';
+import { useAudio, getFactAudio, getInstructionAudio } from '@/lib/useAudio';
 import NumberPad from '@/components/shared/NumberPad';
 
 interface Props {
@@ -67,19 +67,27 @@ export default function FFStep6Quiz({ lesson, onComplete }: Props) {
   const expectedDigits1 = currentQuestion?.turnaroundAnswer ? (currentQuestion.turnaroundAnswer.num1 < 10 ? 1 : 2) : 1;
   const expectedDigits2 = currentQuestion?.turnaroundAnswer ? (currentQuestion.turnaroundAnswer.num2 < 10 ? 1 : 2) : 1;
 
+  // Play instruction on mount
+  useEffect(() => {
+    playAudio(getInstructionAudio('type-answer-for-each-fact'));
+  }, []);
+
   useEffect(() => {
     if (!currentQuestion) return;
     if (currentQuestion.type === 'sum') {
       playAudio(getFactAudio(currentFact.id, 'question'));
     } else {
-      // Turnaround question
-      playAudio(getFactAudio(currentFact.id, 'statement'));
+      // Turnaround question - wait for initial instruction to finish
+      const delay = currentQuestionIndex === 0 ? 2500 : 0;
       setTimeout(() => {
-        playAudio({
-          filename: 'instructions/whats-turnaround.mp3',
-          text: "What's its turnaround?"
-        });
-      }, 2000);
+        playAudio(getFactAudio(currentFact.id, 'statement'));
+        setTimeout(() => {
+          playAudio({
+            filename: 'instructions/whats-turnaround.mp3',
+            text: "What's its turnaround?"
+          });
+        }, 2000);
+      }, delay);
     }
   }, [currentQuestionIndex]);
 
@@ -216,78 +224,65 @@ export default function FFStep6Quiz({ lesson, onComplete }: Props) {
             </div>
             
           {/* Question content with inline feedback */}
-          <div className={`text-center mb-3 p-6 rounded-xl transition-all ${
+          <div className={`text-center mb-3 p-4 rounded-xl transition-all ${
             showFeedback 
-              ? isCorrect 
-                ? 'bg-green-100' 
-                : 'bg-red-100'
-              : ''
+              ? isCorrect ? 'bg-green-200' : 'bg-red-200'
+              : 'bg-gray-50'
           }`}>
             {/* Show different display for each question type */}
             {currentQuestion.type === 'sum' ? (
-              <>
-                <div className="text-5xl font-bold text-green-600 mb-2">
-                  {currentFact.operand1} + {currentFact.operand2} = {showFeedback ? currentFact.result : '?'}
-                </div>
-                {answer && !showFeedback && (
-                  <div className="text-4xl font-bold text-gray-800">
-                    {answer}
-                  </div>
-                )}
-              </>
-            ) : (
-              <>
-                <div className="text-4xl font-bold font-mono text-teal-600 mb-2">
-                  {String(currentFact.operand1).padStart(2, '\u00A0')} + {String(currentFact.operand2).padStart(2, '\u00A0')} = {String(currentFact.result).padStart(2, '\u00A0')}
-                </div>
-                <p className="text-base text-gray-700 mb-2">Turnaround?</p>
-                {!showFeedback && (
-                  <div className="text-3xl font-bold font-mono text-gray-800">
-                    {operandsConfirmed 
-                      ? `${String(answer1).padStart(2, '\u00A0')} + ${String(answer2).padStart(2, '\u00A0')} = ${sumAnswer ? String(sumAnswer).padStart(2, '\u00A0') : '__'}`
-                      : `${answer1 ? String(answer1).padStart(2, '\u00A0') : '__'} + ${answer2 ? String(answer2).padStart(2, '\u00A0') : '__'} = __`
-                    }
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Feedback - inline */}
-            {showFeedback && (
-              <div className="mt-4">
-                {isCorrect ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="text-6xl text-green-600">✓</div>
-                    <div className="text-2xl font-bold text-green-700">Great job!</div>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="text-6xl text-red-600">✗</div>
-                    {currentQuestion.type === 'sum' ? (
-                      <>
-                        <div className="text-xl text-red-700">Listen.</div>
-                        <div className="text-3xl font-bold text-red-700">
-                          {currentFact.operand1} + {currentFact.operand2} = <span className="underline">{currentFact.result}</span>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="text-xl text-red-700">Listen. The turnaround is</div>
-                        <div className="text-3xl font-bold font-mono text-red-700">
-                          {String(currentQuestion.turnaroundAnswer!.num1).padStart(2, '\u00A0')} + <span className="underline">{String(currentQuestion.turnaroundAnswer!.num2).padStart(2, '\u00A0')}</span> = {String(currentFact.result).padStart(2, '\u00A0')}
-                        </div>
-                      </>
-                    )}
-                  </div>
+              <div className="flex items-center justify-center gap-3">
+                <span className={`text-5xl font-bold ${
+                  showFeedback && isCorrect ? 'text-green-800' : 
+                  showFeedback && !isCorrect ? 'text-red-800' : 'text-green-600'
+                }`}>
+                  {currentFact.operand1} + {currentFact.operand2} = {showFeedback ? currentFact.result : (answer || '?')}
+                </span>
+                {showFeedback && (
+                  <span className={`text-4xl ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                    {isCorrect ? '✓' : '✗'}
+                  </span>
                 )}
               </div>
+            ) : (
+              <>
+                <div className="text-3xl font-bold font-mono text-teal-600 mb-2">
+                  {currentFact.operand1} + {currentFact.operand2} = {currentFact.result}
+                </div>
+                <p className="text-sm text-gray-600 mb-2">Turnaround?</p>
+                <div className="flex items-center justify-center gap-2">
+                  <span className={`text-3xl font-bold font-mono ${
+                    showFeedback && isCorrect ? 'text-green-800' : 
+                    showFeedback && !isCorrect ? 'text-red-800' : 'text-gray-800'
+                  }`}>
+                    {showFeedback && operandsConfirmed
+                      ? `${currentQuestion.turnaroundAnswer!.num1} + ${currentQuestion.turnaroundAnswer!.num2} = ${currentFact.result}`
+                      : showFeedback && !operandsConfirmed
+                        ? `${answer1} + ${answer2} = ?`
+                        : operandsConfirmed 
+                          ? `${answer1} + ${answer2} = ${sumAnswer || '?'}`
+                          : `${answer1 || '_'} + ${answer2 || '_'} = ?`
+                    }
+                  </span>
+                  {showFeedback && (
+                    <span className={`text-3xl ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                      {isCorrect ? '✓' : '✗'}
+                    </span>
+                  )}
+                </div>
+                {showFeedback && !isCorrect && (
+                  <div className="text-sm text-red-700 mt-2">
+                    The turnaround is {currentQuestion.turnaroundAnswer!.num1} + <span className="underline">{currentQuestion.turnaroundAnswer!.num2}</span> = {currentFact.result}
+                  </div>
+                )}
+              </>
             )}
           </div>
 
-          {/* Number pad */}
-          {!showFeedback && (
+          {/* Number pad - always visible, no display */}
               <NumberPad 
               value={currentQuestion.type === 'sum' ? answer : (operandsConfirmed ? sumAnswer : '')}
+              hideDisplay
                 onChange={(val) => {
                   if (currentQuestion.type === 'sum') {
                     setAnswer(val);
@@ -314,7 +309,6 @@ export default function FFStep6Quiz({ lesson, onComplete }: Props) {
                   }
                 }}
               />
-          )}
         </div>
       </div>
     </div>

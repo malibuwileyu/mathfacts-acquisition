@@ -26,7 +26,6 @@ import FFStep1Introduce from '@/components/fact-families/FFStep1Introduce';
 import FFStep2Practice from '@/components/fact-families/FFStep2Practice';
 import FFStep3Turnarounds from '@/components/fact-families/FFStep3Turnarounds';
 import FFStep4TurnaroundPractice from '@/components/fact-families/FFStep4TurnaroundPractice';
-import FFQuizIntro from '@/components/fact-families/FFQuizIntro';
 import FFStep6Quiz from '@/components/fact-families/FFStep6Quiz';
 import FFStep5Review from '@/components/fact-families/FFStep5Review';
 import ReviewStep from '@/components/shared/ReviewStep';
@@ -91,7 +90,7 @@ export default function LessonPage() {
       // Other series saying lessons have 6 steps
       return [1, 3, 15].includes(lessonId) ? 7 : 6;
     }
-    return 7;  // Fact Families: 7 steps
+    return 6;  // Fact Families: 6 steps (intro removed)
   };
   
   const maxSteps = getMaxSteps();
@@ -319,12 +318,11 @@ export default function LessonPage() {
             {currentStep === 2 && <FFStep5Review lesson={lesson} onComplete={handleStepComplete} />}
             {currentStep === 3 && <FFStep3Turnarounds lesson={lesson} onComplete={handleStepComplete} />}
             {currentStep === 4 && <FFStep4TurnaroundPractice lesson={lesson} onComplete={handleStepComplete} />}
-            {currentStep === 5 && <FFQuizIntro onNext={handleStepComplete} />}
-            {currentStep === 6 && <FFStep6Quiz lesson={lesson} onComplete={(score) => {
+            {currentStep === 5 && <FFStep6Quiz lesson={lesson} onComplete={(score) => {
               // Turnaround quiz - just continue to next step, don't complete lesson yet
               handleStepComplete();
             }} />}
-            {currentStep === 7 && <ReviewStep lesson={lesson} onComplete={handleQuizComplete} />}
+            {currentStep === 6 && <ReviewStep lesson={lesson} onComplete={handleQuizComplete} />}
           </>
         )}
       </div>

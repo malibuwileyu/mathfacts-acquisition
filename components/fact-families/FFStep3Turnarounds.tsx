@@ -105,73 +105,75 @@ export default function FFStep3Turnarounds({ lesson, onComplete }: Props) {
                 : 'bg-red-100'
               : ''
           }`}>
-            {/* Given equation - aligned */}
-            <div className="text-4xl font-bold font-mono text-teal-600 mb-2">
-              {String(baseFact.operand1).padStart(2, '\u00A0')} + {String(baseFact.operand2).padStart(2, '\u00A0')} = {String(baseFact.result).padStart(2, '\u00A0')}
+            {/* Equations aligned in table structure */}
+            <div className="inline-block font-mono text-4xl font-bold">
+              {/* Row 1: Given equation */}
+              <div className="flex items-center justify-center text-teal-600 mb-3">
+                <span className="w-12 text-center">{baseFact.operand1}</span>
+                <span className="w-8 text-center">+</span>
+                <span className="w-12 text-center">{baseFact.operand2}</span>
+                <span className="w-8 text-center">=</span>
+                <span className="w-12 text-left">{baseFact.result}</span>
             </div>
-            
-            {/* Hear button (only shows after first play) */}
-            {hasHeardOnce && !showFeedback && (
+              
+              {/* Hear button (only shows after first play) */}
+              {hasHeardOnce && !showFeedback && (
+                <div className="flex justify-center mb-3">
             <button
               onClick={playQuestion}
-                className="bg-teal-400 hover:bg-teal-500 text-white text-sm font-bold px-3 py-1 rounded-lg mb-3"
+              className="bg-teal-400 hover:bg-teal-500 text-white text-sm font-bold px-3 py-1 rounded-lg"
             >
-                🔊 Hear Again
+                    🔊 Hear Again
             </button>
-            )}
-
-            {/* Answer input - aligned vertically */}
-            {!showFeedback && (
-              <div className="mt-3">
-                <div className="text-4xl font-bold font-mono text-gray-900 flex items-center justify-center gap-2">
-              <input
-                type="text"
-                value={answer1}
-                onChange={(e) => setAnswer1(e.target.value)}
-                    className="w-16 h-16 text-center border-3 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none text-3xl font-mono"
-                    placeholder="__"
-                maxLength={2}
-                autoFocus
-              />
-                  <span>+</span>
-              <input
-                type="text"
-                value={answer2}
-                onChange={(e) => setAnswer2(e.target.value)}
-                    className="w-16 h-16 text-center border-3 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none text-3xl font-mono"
-                    placeholder="__"
-                maxLength={2}
-              />
-                  <span>= {String(baseFact.result).padStart(2, '\u00A0')}</span>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Feedback - inline */}
-            {showFeedback && (
-              <div className="mt-4">
-                {isCorrect ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="text-6xl text-green-600">✓</div>
-                    <div className="text-2xl font-bold text-green-700">Great job!</div>
-                  </div>
+              {/* Row 2: Answer input or feedback - checkmark positioned absolutely */}
+              <div className="relative flex items-center justify-center text-gray-900">
+                {!showFeedback ? (
+                  <>
+                    <span className="w-12 flex justify-center">
+                      <div className="w-10 h-12 flex items-center justify-center border-2 border-gray-300 rounded-lg text-3xl font-mono bg-white">
+                        {answer1 || <span className="text-gray-400">_</span>}
+                      </div>
+                    </span>
+                    <span className="w-8 text-center">+</span>
+                    <span className="w-12 flex justify-center">
+                      <div className="w-10 h-12 flex items-center justify-center border-2 border-gray-300 rounded-lg text-3xl font-mono bg-white">
+                        {answer2 || <span className="text-gray-400">_</span>}
+                      </div>
+                    </span>
+                    <span className="w-8 text-center">=</span>
+                    <span className="w-12 text-left">{baseFact.result}</span>
+                  </>
                 ) : (
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="text-6xl text-red-600">✗</div>
-                    <div className="text-xl text-red-700">Listen. The turnaround is</div>
-                    <div className="text-3xl font-bold font-mono text-red-700">
-                      {String(turnA).padStart(2, '\u00A0')} + <span className="underline">{String(turnB).padStart(2, '\u00A0')}</span> = {String(baseFact.result).padStart(2, '\u00A0')}
-                    </div>
-                  </div>
+                  <>
+                    <span className="w-12 text-center">{answer1}</span>
+                    <span className="w-8 text-center">+</span>
+                    <span className="w-12 text-center">{answer2}</span>
+                    <span className="w-8 text-center">=</span>
+                    <span className="w-12 text-left">{baseFact.result}</span>
+                    {/* Checkmark positioned absolutely so it doesn't shift layout */}
+                    <span className={`absolute -right-2 text-3xl ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                      {isCorrect ? '✓' : '✗'}
+                    </span>
+                  </>
                 )}
-            </div>
-            )}
           </div>
 
-          {/* Number pad */}
-          {!showFeedback && (
+              {/* Correction for wrong answer */}
+              {showFeedback && !isCorrect && (
+                <div className="mt-2 text-center text-red-700 text-sm">
+                  The turnaround is {turnA} + <span className="underline">{turnB}</span> = {baseFact.result}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Number pad - always visible */}
               <NumberPad 
-                value=""  // Display shows current state in inputs, not here
+                value=""
+                hideDisplay
                 onChange={(val) => {
                   if (val === '') {
                     // Clear button pressed - clear both
@@ -190,7 +192,6 @@ export default function FFStep3Turnarounds({ lesson, onComplete }: Props) {
                   }
                 }}
               />
-          )}
         </div>
       </div>
     </div>

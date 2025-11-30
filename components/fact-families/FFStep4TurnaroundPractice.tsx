@@ -110,56 +110,47 @@ export default function FFStep4TurnaroundPractice({ lesson, onComplete }: Props)
               </>
             )}
 
-          {/* Answer input */}
-            {(answer1 || answer2) && !showFeedback && (
-              <div className="bg-gray-50 rounded-lg p-3 mt-3">
-                <div className="text-4xl font-bold font-mono text-gray-900">
-                  {answer1 ? String(answer1).padStart(2, ' ') : '__'} + {answer2 ? String(answer2).padStart(2, ' ') : '__'}
+          {/* Answer display with inline feedback */}
+            {(answer1 || answer2 || showFeedback) && (
+              <div className="mt-3">
+                <div className="flex items-center justify-center gap-2 text-4xl font-bold font-mono">
+                  <span className={showFeedback && isCorrect ? 'text-green-800' : showFeedback ? 'text-red-800' : 'text-gray-900'}>
+                    {answer1 || '_'} + {answer2 || '_'} = {baseFact.result}
+                  </span>
+                  {showFeedback && (
+                    <span className={`text-3xl ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                      {isCorrect ? '✓' : '✗'}
+                    </span>
+                  )}
                 </div>
-              </div>
-            )}
-
-            {/* Feedback - inline */}
-            {showFeedback && (
-              <div>
-                {isCorrect ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="text-6xl text-green-600">✓</div>
-                    <div className="text-2xl font-bold text-green-700">Great job!</div>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="text-6xl text-red-600">✗</div>
-                    <div className="text-xl text-red-700">Listen. The turnaround is</div>
-                    <div className="text-3xl font-bold font-mono text-red-700">
-                      {String(turnA).padStart(2, ' ')} + <span className="underline">{String(turnB).padStart(2, ' ')}</span> = {String(baseFact.result).padStart(2, ' ')}
-                    </div>
-                  </div>
+                {showFeedback && !isCorrect && (
+                  <div className="text-center text-red-700 text-sm mt-2">
+                    The turnaround is {turnA} + <span className="underline">{turnB}</span> = {baseFact.result}
+          </div>
                 )}
             </div>
           )}
             </div>
 
-          {/* Number pad */}
-          {!showFeedback && (
+          {/* Number pad - always visible */}
               <NumberPad 
                 value=""
+                hideDisplay
                 onChange={(val) => {
                   if (val === '') {
                     setAnswer1('');
                     setAnswer2('');
                   } else {
-                  if (!answer1 || answer1.length < expectedDigits1) {
-                    setAnswer1(answer1 + val);
-                  } else if (!answer2 || answer2.length < expectedDigits2) {
-                    setAnswer2(answer2 + val);
+                if (!answer1 || answer1.length < expectedDigits1) {
+                  setAnswer1(answer1 + val);
+                } else if (!answer2 || answer2.length < expectedDigits2) {
+                  setAnswer2(answer2 + val);
                     } else {
                       setAnswer2(val);
                     }
                   }
                 }}
               />
-          )}
         </div>
       </div>
     </div>

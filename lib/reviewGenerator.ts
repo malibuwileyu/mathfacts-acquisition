@@ -20,21 +20,33 @@ export interface ReviewQuestion {
 
 /**
  * Generate 20 questions: 10 from current lesson, 10 from previous lessons
+ * Spreads repetitions evenly and prevents back-to-back duplicates
  */
 export function generateReviewQuestions(currentLesson: Lesson): ReviewQuestion[] {
   const reviewQuestions: ReviewQuestion[] = [];
   
-  // PART 1: 10 questions from current lesson (repetitions allowed)
+  // PART 1: 10 questions from current lesson (spread evenly)
   const currentLessonFacts = currentLesson.facts.map(f => ({ ...f, lessonId: currentLesson.id }));
+  const currentLessonQuestions: ReviewQuestion[] = [];
   
-  for (let i = 0; i < 10; i++) {
-    const randomFact = currentLessonFacts[Math.floor(Math.random() * currentLessonFacts.length)];
-    reviewQuestions.push({
-      fact: randomFact,
-      isFromCurrentLesson: true,
-      sourceLesson: currentLesson.id
+  // Each fact appears at least once, then distribute remaining slots evenly
+  const factsCount = currentLessonFacts.length;
+  const questionsNeeded = 10;
+  const baseRepetitions = Math.floor(questionsNeeded / factsCount);
+  let extraSlots = questionsNeeded % factsCount;
+  
+  currentLessonFacts.forEach(fact => {
+    const reps = baseRepetitions + (extraSlots > 0 ? 1 : 0);
+    if (extraSlots > 0) extraSlots--;
+    
+    for (let i = 0; i < reps; i++) {
+      currentLessonQuestions.push({
+          fact,
+          isFromCurrentLesson: true,
+          sourceLesson: currentLesson.id
+        });
+      }
     });
-  }
   
   // PART 2: 10 questions from previous lessons
   const previousLessons = lessons.filter(l => l.id < currentLesson.id);
@@ -43,21 +55,47 @@ export function generateReviewQuestions(currentLesson: Lesson): ReviewQuestion[]
   previousLessons.forEach(lesson => {
     lesson.facts.forEach(fact => {
       allPreviousFacts.push({ ...fact, lessonId: lesson.id });
+      });
     });
-  });
-  
-  // Select 10 from previous lessons with weighting (duplicates okay for early lessons with few facts)
+        
+  // Select 10 from previous lessons with weighting
   const usedFactIds = new Set<string>();
   const previousSelected = selectWithWeight(allPreviousFacts, 10, usedFactIds);
     
-  reviewQuestions.push(...previousSelected.map(fact => ({
-    fact,
-    isFromCurrentLesson: false,
-    sourceLesson: fact.lessonId!
-  })));
+  const previousQuestions = previousSelected.map(fact => ({
+      fact,
+      isFromCurrentLesson: false,
+      sourceLesson: fact.lessonId!
+  }));
   
-  // Shuffle and return
-  return shuffleArray(reviewQuestions);
+  // Combine and shuffle, then prevent back-to-back duplicates
+  reviewQuestions.push(...currentLessonQuestions, ...previousQuestions);
+  const shuffled = shuffleArray(reviewQuestions);
+  
+  return preventBackToBack(shuffled);
+}
+
+/**
+ * Reorder to prevent back-to-back duplicate facts
+ */
+function preventBackToBack(questions: ReviewQuestion[]): ReviewQuestion[] {
+  const result: ReviewQuestion[] = [];
+  const remaining = [...questions];
+  
+  while (remaining.length > 0) {
+    const lastFactId = result.length > 0 ? result[result.length - 1].fact.id : null;
+  
+    // Try to find a question that's different from the last one
+    let idx = remaining.findIndex(q => q.fact.id !== lastFactId);
+    
+    // If all remaining are the same, just take the first one
+    if (idx === -1) idx = 0;
+    
+    result.push(remaining[idx]);
+    remaining.splice(idx, 1);
+  }
+  
+  return result;
 }
 
 /**

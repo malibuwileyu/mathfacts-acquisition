@@ -109,7 +109,7 @@ export default function Step5GuidedC({ lesson, onComplete }: Props) {
                 }`}
               />
             ))}
-          </div>
+            </div>
 
           {/* Current question with inline feedback */}
           <div className={`text-center mb-4 p-4 rounded-xl transition-all ${
@@ -128,7 +128,7 @@ export default function Step5GuidedC({ lesson, onComplete }: Props) {
               </span>
               {showFeedback && (
                 <span className={`text-4xl ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-                  {isCorrect ? '✓' : '✗'}
+              {isCorrect ? '✓' : '✗'}
                 </span>
               )}
             </div>

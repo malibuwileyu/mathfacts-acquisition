@@ -33,11 +33,11 @@ export default function NumberPad({ value, onChange, maxValue = 20, hideDisplay 
     <div className="w-full max-w-sm mx-auto">
       {/* Display - can be hidden when answer shows elsewhere */}
       {!hideDisplay && (
-        <div className="bg-gray-100 rounded-lg p-3 mb-2 text-center">
-          <div className="text-4xl font-bold text-gray-800 h-12 flex items-center justify-center">
-            {value || '_'}
-          </div>
+      <div className="bg-gray-100 rounded-lg p-3 mb-2 text-center">
+        <div className="text-4xl font-bold text-gray-800 h-12 flex items-center justify-center">
+          {value || '_'}
         </div>
+      </div>
       )}
 
       {/* Number grid */}
