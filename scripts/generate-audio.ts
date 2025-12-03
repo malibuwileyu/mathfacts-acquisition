@@ -78,7 +78,10 @@ async function generateWithDeepgram(text: string, filename: string) {
     throw new Error('DEEPGRAM_API_KEY not set');
   }
   
-  const response = await fetch('https://api.deepgram.com/v1/speak?model=aura-asteria-en', {
+  // Use voice from command line arg (e.g., aura-2-athena-en)
+  const model = VOICE || 'aura-athena-en';
+  
+  const response = await fetch(`https://api.deepgram.com/v1/speak?model=${model}`, {
     method: 'POST',
     headers: {
       'Authorization': `Token ${DEEPGRAM_KEY}`,
@@ -90,7 +93,8 @@ async function generateWithDeepgram(text: string, filename: string) {
   });
   
   if (!response.ok) {
-    throw new Error(`Deepgram TTS failed: ${response.statusText}`);
+    const error = await response.text();
+    throw new Error(`Deepgram TTS failed: ${response.status} - ${error}`);
   }
   
   const audioBuffer = await response.arrayBuffer();
@@ -101,7 +105,7 @@ async function generateWithDeepgram(text: string, filename: string) {
 }
 
 /**
- * Generate audio file using Google Cloud TTS
+ * Generate audio file using Google AI Studio TTS (accepts API keys!)
  */
 async function generateWithGoogle(text: string, filename: string) {
   const GOOGLE_KEY = process.env.GOOGLE_API_KEY;
@@ -110,10 +114,12 @@ async function generateWithGoogle(text: string, filename: string) {
     throw new Error('GOOGLE_API_KEY not set');
   }
   
-  const response = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${GOOGLE_KEY}`, {
+  // Use the v1beta API endpoint that accepts API keys
+  const response = await fetch(`https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${GOOGLE_KEY}`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': GOOGLE_KEY
     },
     body: JSON.stringify({
       input: { text },
@@ -123,8 +129,8 @@ async function generateWithGoogle(text: string, filename: string) {
       },
       audioConfig: {
         audioEncoding: 'MP3',
-        speakingRate: 0.95,  // Slightly slower for kids
-        pitch: 2.0  // Slightly higher for friendliness
+        speakingRate: 0.95,
+        pitch: 2.0
       }
     })
   });
