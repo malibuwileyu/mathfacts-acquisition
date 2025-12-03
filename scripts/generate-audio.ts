@@ -10,6 +10,12 @@
  *   npm run generate-audio -- --voice=nova
  */
 
+import { config } from 'dotenv';
+import { resolve } from 'path';
+
+// Load .env.local
+config({ path: resolve(process.cwd(), '.env.local') });
+
 import { writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { lessons } from '../lib/lessonData';
@@ -18,6 +24,11 @@ import { Fact } from '../types';
 const AUDIO_DIR = join(process.cwd(), 'public', 'audio');
 const PROVIDER = process.argv.find(arg => arg.startsWith('--provider='))?.split('=')[1] || 'openai';
 const VOICE = process.argv.find(arg => arg.startsWith('--voice='))?.split('=')[1] || 'nova';
+
+console.log(`🎙️  Audio Generation Script`);
+console.log(`Provider: ${PROVIDER}`);
+console.log(`Voice: ${VOICE}`);
+console.log(`Output: ${AUDIO_DIR}\n`);
 
 // Ensure audio directory exists
 mkdirSync(AUDIO_DIR, { recursive: true });
@@ -90,10 +101,55 @@ async function generateWithDeepgram(text: string, filename: string) {
 }
 
 /**
+ * Generate audio file using Google Cloud TTS
+ */
+async function generateWithGoogle(text: string, filename: string) {
+  const GOOGLE_KEY = process.env.GOOGLE_API_KEY;
+  
+  if (!GOOGLE_KEY) {
+    throw new Error('GOOGLE_API_KEY not set');
+  }
+  
+  const response = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${GOOGLE_KEY}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      input: { text },
+      voice: {
+        languageCode: 'en-US',
+        name: VOICE  // e.g., 'en-US-Wavenet-F' or 'Laomedeia'
+      },
+      audioConfig: {
+        audioEncoding: 'MP3',
+        speakingRate: 0.95,  // Slightly slower for kids
+        pitch: 2.0  // Slightly higher for friendliness
+      }
+    })
+  });
+  
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Google TTS failed: ${response.status} - ${error}`);
+  }
+  
+  const data = await response.json();
+  const audioContent = Buffer.from(data.audioContent, 'base64');
+  
+  const filePath = join(AUDIO_DIR, filename);
+  writeFileSync(filePath, audioContent);
+  
+  console.log(`✅ Generated: ${filename}`);
+}
+
+/**
  * Generate audio file (provider-agnostic)
  */
 async function generateAudio(text: string, filename: string) {
-  if (PROVIDER === 'deepgram') {
+  if (PROVIDER === 'google') {
+    return generateWithGoogle(text, filename);
+  } else if (PROVIDER === 'deepgram') {
     return generateWithDeepgram(text, filename);
   } else {
     return generateWithOpenAI(text, filename);
@@ -159,6 +215,7 @@ async function generateInstructionalAudio() {
   console.log('\n📢 Generating instructional phrases...');
   
   const phrases = [
+    { text: 'Listen and remember the facts.', file: 'listen-and-remember.mp3' },
     { text: 'Great job!', file: 'great-job.mp3' },
     { text: 'Excellent work!', file: 'excellent-work.mp3' },
     { text: 'Keep going!', file: 'keep-going.mp3' },
