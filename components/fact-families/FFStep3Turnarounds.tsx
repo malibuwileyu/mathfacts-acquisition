@@ -176,11 +176,12 @@ export default function FFStep3Turnarounds({ lesson, onComplete }: Props) {
             </div>
           </div>
 
-          {/* Number pad - always visible */}
+          {/* Number pad - blocked until audio finishes */}
               <NumberPad 
                 value=""
                 hideDisplay
                 onChange={(val) => {
+                  if (!hasHeardOnce) return; // Block input until audio is done
                   if (val === '') {
                     // Clear button pressed - clear both
                     setAnswer1('');
