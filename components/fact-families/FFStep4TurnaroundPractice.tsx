@@ -114,22 +114,23 @@ export default function FFStep4TurnaroundPractice({ lesson, onComplete }: Props)
             {(answer1 || answer2 || showFeedback) && (
               <div className="mt-3">
                 <div className="flex items-center justify-center gap-2 text-4xl font-bold font-mono">
+                  {/* Invisible placeholder for checkmark (keeps alignment stable) */}
+                  <span className="text-3xl invisible" aria-hidden="true">✓</span>
                   <span className={showFeedback && isCorrect ? 'text-green-800' : showFeedback ? 'text-red-800' : 'text-gray-900'}>
                     {answer1 || '_'} + {answer2 || '_'} = {baseFact.result}
                   </span>
-                  {showFeedback && (
-                    <span className={`text-3xl ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-                      {isCorrect ? '✓' : '✗'}
-                    </span>
-                  )}
+                  {/* Checkmark/X - always takes space, visible only when showing feedback */}
+                  <span className={`text-3xl ${showFeedback ? '' : 'invisible'} ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                    {isCorrect ? '✓' : '✗'}
+                  </span>
                 </div>
                 {showFeedback && !isCorrect && (
                   <div className="text-center text-red-700 text-sm mt-2">
                     The turnaround is {turnA} + <span className="underline">{turnB}</span> = {baseFact.result}
-          </div>
+                  </div>
                 )}
-            </div>
-          )}
+              </div>
+            )}
             </div>
 
           {/* Number pad - always visible */}

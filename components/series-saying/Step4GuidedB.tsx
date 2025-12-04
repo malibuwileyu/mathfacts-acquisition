@@ -119,17 +119,18 @@ export default function Step4GuidedB({ lesson, onComplete }: Props) {
               : 'bg-gray-50'
           }`}>
             <div className="flex items-center justify-center gap-3">
+              {/* Invisible placeholder for checkmark (keeps alignment stable) */}
+              <span className="text-4xl invisible" aria-hidden="true">✓</span>
               <span className={`text-5xl font-bold ${
                 showFeedback && isCorrect ? 'text-green-800' : 
                 showFeedback && !isCorrect ? 'text-red-800' : 'text-gray-800'
               }`}>
                 {currentFact.operand1} + {currentFact.operand2} = {showFeedback ? currentFact.result : (answer || '?')}
               </span>
-              {showFeedback && (
-                <span className={`text-4xl ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-                  {isCorrect ? '✓' : '✗'}
-                </span>
-              )}
+              {/* Checkmark/X - always takes space, visible only when showing feedback */}
+              <span className={`text-4xl ${showFeedback ? '' : 'invisible'} ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                {isCorrect ? '✓' : '✗'}
+              </span>
             </div>
           </div>
 
