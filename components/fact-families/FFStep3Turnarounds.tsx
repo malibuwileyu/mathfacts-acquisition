@@ -107,29 +107,34 @@ export default function FFStep3Turnarounds({ lesson, onComplete }: Props) {
           }`}>
             {/* Equations aligned in table structure */}
             <div className="inline-block font-mono text-4xl font-bold">
-              {/* Row 1: Given equation */}
+              {/* Row 1: Given equation - with invisible placeholder for checkmark alignment */}
               <div className="flex items-center justify-center text-teal-600 mb-3">
+                <span className="w-8 invisible" aria-hidden="true">✓</span>
                 <span className="w-12 text-center">{baseFact.operand1}</span>
                 <span className="w-8 text-center">+</span>
                 <span className="w-12 text-center">{baseFact.operand2}</span>
                 <span className="w-8 text-center">=</span>
-                <span className="w-12 text-left">{baseFact.result}</span>
-            </div>
+                <span className="w-12 text-center">{baseFact.result}</span>
+                <span className="w-8 invisible" aria-hidden="true">✓</span>
+              </div>
               
               {/* Hear button (only shows after first play) */}
               {hasHeardOnce && !showFeedback && (
                 <div className="flex justify-center mb-3">
-            <button
-              onClick={playQuestion}
-              className="bg-teal-400 hover:bg-teal-500 text-white text-sm font-bold px-3 py-1 rounded-lg"
-            >
+                  <button
+                    onClick={playQuestion}
+                    className="bg-teal-400 hover:bg-teal-500 text-white text-sm font-bold px-3 py-1 rounded-lg"
+                  >
                     🔊 Hear Again
-            </button>
+                  </button>
                 </div>
               )}
 
-              {/* Row 2: Answer input or feedback - checkmark positioned absolutely */}
-              <div className="relative flex items-center justify-center text-gray-900">
+              {/* Row 2: Answer input or feedback - checkmark always present for alignment */}
+              <div className="flex items-center justify-center text-gray-900">
+                {/* Left placeholder - always present */}
+                <span className="w-8 invisible" aria-hidden="true">✓</span>
+                
                 {!showFeedback ? (
                   <>
                     <span className="w-12 flex justify-center">
@@ -144,7 +149,7 @@ export default function FFStep3Turnarounds({ lesson, onComplete }: Props) {
                       </div>
                     </span>
                     <span className="w-8 text-center">=</span>
-                    <span className="w-12 text-left">{baseFact.result}</span>
+                    <span className="w-12 text-center">{baseFact.result}</span>
                   </>
                 ) : (
                   <>
@@ -152,14 +157,15 @@ export default function FFStep3Turnarounds({ lesson, onComplete }: Props) {
                     <span className="w-8 text-center">+</span>
                     <span className="w-12 text-center">{answer2}</span>
                     <span className="w-8 text-center">=</span>
-                    <span className="w-12 text-left">{baseFact.result}</span>
-                    {/* Checkmark positioned absolutely so it doesn't shift layout */}
-                    <span className={`absolute -right-2 text-3xl ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-                      {isCorrect ? '✓' : '✗'}
-                    </span>
+                    <span className="w-12 text-center">{baseFact.result}</span>
                   </>
                 )}
-          </div>
+                
+                {/* Right checkmark - always present, visible only when showing feedback */}
+                <span className={`w-8 text-3xl text-center ${showFeedback ? '' : 'invisible'} ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                  {isCorrect ? '✓' : '✗'}
+                </span>
+              </div>
 
               {/* Correction for wrong answer */}
               {showFeedback && !isCorrect && (
