@@ -13,10 +13,12 @@ interface Props {
   onChange: (value: string) => void;
   maxValue?: number;
   hideDisplay?: boolean;
+  disabled?: boolean;
 }
 
-export default function NumberPad({ value, onChange, maxValue = 20, hideDisplay = false }: Props) {
+export default function NumberPad({ value, onChange, maxValue = 20, hideDisplay = false, disabled = false }: Props) {
   const handleNumberClick = (num: number) => {
+    if (disabled) return;
     const newValue = value + num.toString();
     if (parseInt(newValue) <= maxValue) {
       onChange(newValue);
@@ -24,6 +26,7 @@ export default function NumberPad({ value, onChange, maxValue = 20, hideDisplay 
   };
 
   const handleClear = () => {
+    if (disabled) return;
     onChange('');
   };
 
@@ -46,7 +49,12 @@ export default function NumberPad({ value, onChange, maxValue = 20, hideDisplay 
           <button
             key={num}
             onClick={() => handleNumberClick(num)}
-            className="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white text-3xl font-bold py-5 rounded-lg transition active:scale-95"
+            disabled={disabled}
+            className={`text-white text-3xl font-bold py-5 rounded-lg transition ${
+              disabled 
+                ? 'bg-gray-300 cursor-not-allowed' 
+                : 'bg-blue-500 hover:bg-blue-600 active:bg-blue-700 active:scale-95'
+            }`}
           >
             {num}
           </button>
@@ -57,13 +65,23 @@ export default function NumberPad({ value, onChange, maxValue = 20, hideDisplay 
       <div className="grid grid-cols-2 gap-2">
         <button
           onClick={() => handleNumberClick(0)}
-          className="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white text-3xl font-bold py-5 rounded-lg transition active:scale-95"
+          disabled={disabled}
+          className={`text-white text-3xl font-bold py-5 rounded-lg transition ${
+            disabled 
+              ? 'bg-gray-300 cursor-not-allowed' 
+              : 'bg-blue-500 hover:bg-blue-600 active:bg-blue-700 active:scale-95'
+          }`}
         >
           0
         </button>
         <button
           onClick={handleClear}
-          className="bg-red-500 hover:bg-red-600 active:bg-red-700 text-white text-xl font-bold py-5 rounded-lg transition active:scale-95"
+          disabled={disabled}
+          className={`text-white text-xl font-bold py-5 rounded-lg transition ${
+            disabled 
+              ? 'bg-gray-300 cursor-not-allowed' 
+              : 'bg-red-500 hover:bg-red-600 active:bg-red-700 active:scale-95'
+          }`}
         >
           Clear
         </button>
