@@ -43,7 +43,7 @@ export const useAudio = () => {
   /**
    * Play audio file from /public/audio/
    */
-  const playAudio = useCallback(async (audioFile: AudioFile): Promise<void> => {
+  const playAudio = useCallback(async (audioFile: AudioFile, retryCount = 0): Promise<void> => {
     // Stop any existing audio
     stopAudio();
     
@@ -73,8 +73,19 @@ export const useAudio = () => {
             .then(() => console.log(`🔊 Playing: ${audioFile.filename}`))
             .catch((error) => {
               console.error('Play failed:', error);
-              // Fallback to TTS
-              fallbackToTTS(audioFile.text).then(resolve).catch(reject);
+              
+              // If NotAllowedError (autoplay blocked), retry after 2s
+              if (error.name === 'NotAllowedError' && retryCount < 2) {
+                console.log(`⏳ Autoplay blocked, retrying in 2s (attempt ${retryCount + 1})...`);
+                isPlayingRef.current = false;
+                audioRef.current = null;
+                setTimeout(() => {
+                  playAudio(audioFile, retryCount + 1).then(resolve).catch(reject);
+                }, 2000);
+              } else {
+                // Fallback to TTS after retries exhausted
+                fallbackToTTS(audioFile.text).then(resolve).catch(reject);
+              }
             });
         };
         
