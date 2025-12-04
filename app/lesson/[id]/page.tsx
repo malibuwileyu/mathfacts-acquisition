@@ -9,6 +9,7 @@ import {
   completeLessons,
   updateFactProgress 
 } from '@/lib/progressStore';
+import AudioUnlockOverlay from '@/components/shared/AudioUnlockOverlay';
 
 // Series Saying components
 import RuleIntroduction from '@/components/series-saying/RuleIntroduction';
@@ -56,6 +57,8 @@ export default function LessonPage() {
   const [currentStep, setCurrentStep] = useState(getStartingStep());
   const [lessonComplete, setLessonComplete] = useState(false);
   const [quizScore, setQuizScore] = useState<number | null>(null);
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
+  const [readyToRender, setReadyToRender] = useState(false);
   
   // Load saved progress on mount
   useEffect(() => {
@@ -66,6 +69,24 @@ export default function LessonPage() {
       setCurrentStep(savedProgress.currentStep);
     }
   }, [lessonId, lesson]);
+  
+  // Check if we need audio unlock on mount
+  useEffect(() => {
+    const navEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+    const isRefresh = navEntry?.type === 'reload';
+    const hasVisited = sessionStorage.getItem(`lesson-visited-${window.location.pathname}`);
+    
+    if (isRefresh || hasVisited) {
+      // Need to wait for click to unlock audio
+      setAudioUnlocked(false);
+    } else {
+      // First visit - audio should work
+      setAudioUnlocked(true);
+    }
+    
+    sessionStorage.setItem(`lesson-visited-${window.location.pathname}`, 'true');
+    setReadyToRender(true);
+  }, []);
   
   if (!lesson) {
     return (
@@ -198,9 +219,23 @@ export default function LessonPage() {
     );
   }
   
+  // Wait for ready check
+  if (!readyToRender) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-blue-100">
+        <div className="text-2xl text-gray-500">Loading...</div>
+      </div>
+    );
+  }
+  
   // Main lesson UI
   return (
     <div className="h-screen flex flex-col bg-gradient-to-b from-blue-50 to-blue-100 overflow-hidden">
+      {/* Audio unlock overlay - only shows after refresh */}
+      {!audioUnlocked && (
+        <AudioUnlockOverlay onUnlock={() => setAudioUnlocked(true)} />
+      )}
+      
       {/* Compact progress header */}
       <div className="flex-shrink-0 p-2">
         <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-3">
@@ -251,9 +286,16 @@ export default function LessonPage() {
         </div>
       </div>
 
-      {/* Step content - takes remaining height */}
+      {/* Step content - takes remaining height, only renders after audio unlocked */}
       <div className="flex-1 overflow-hidden">
-        {lesson.format === 'series_saying' ? (
+        {!audioUnlocked ? (
+          <div className="h-full flex items-center justify-center">
+            <div className="text-center text-gray-500">
+              <div className="text-6xl mb-4">🔊</div>
+              <div className="text-xl">Tap anywhere to start</div>
+            </div>
+          </div>
+        ) : lesson.format === 'series_saying' ? (
           <>
             {currentStep === 1 && <Step1Modeled lesson={lesson} onComplete={handleStepComplete} />}
             
