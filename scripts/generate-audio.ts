@@ -24,10 +24,12 @@ import { Fact } from '../types';
 const AUDIO_DIR = join(process.cwd(), 'public', 'audio');
 const PROVIDER = process.argv.find(arg => arg.startsWith('--provider='))?.split('=')[1] || 'openai';
 const VOICE = process.argv.find(arg => arg.startsWith('--voice='))?.split('=')[1] || 'nova';
+const INSTRUCTIONS_ONLY = process.argv.includes('--instructions-only');
 
 console.log(`🎙️  Audio Generation Script`);
 console.log(`Provider: ${PROVIDER}`);
 console.log(`Voice: ${VOICE}`);
+console.log(`Instructions only: ${INSTRUCTIONS_ONLY}`);
 console.log(`Output: ${AUDIO_DIR}\n`);
 
 // Ensure audio directory exists
@@ -221,8 +223,10 @@ async function generateInstructionalAudio() {
   console.log('\n📢 Generating instructional phrases...');
   
   const phrases = [
+    // Core feedback
     { text: 'Listen and remember the facts.', file: 'listen-and-remember.mp3' },
     { text: 'Great job!', file: 'great-job.mp3' },
+    { text: 'Good job!', file: 'good-job.mp3' },
     { text: 'Excellent work!', file: 'excellent-work.mp3' },
     { text: 'Keep going!', file: 'keep-going.mp3' },
     { text: 'Not quite. Let\'s try again.', file: 'try-again.mp3' },
@@ -232,6 +236,34 @@ async function generateInstructionalAudio() {
     { text: 'You\'re doing great!', file: 'doing-great.mp3' },
     { text: 'They have the same sum. They\'re a fact family!', file: 'fact-family.mp3' },
     { text: 'Your turn', file: 'your-turn-short.mp3' },
+    
+    // Plus One Rule (3 parts for pacing)
+    { text: 'Here\'s a helpful rule.', file: 'plus-one-rule-part1.mp3' },
+    { text: 'When you add one to any number, you get the next number!', file: 'plus-one-rule-part2.mp3' },
+    { text: 'Two plus one equals three. Three plus one equals four. The answer is always the next number!', file: 'plus-one-rule-part3.mp3' },
+    
+    // Plus Zero Rule (3 parts)
+    { text: 'Here\'s another helpful rule.', file: 'plus-zero-rule-part1.mp3' },
+    { text: 'When you add zero to any number, you get the same number back!', file: 'plus-zero-rule-part2.mp3' },
+    { text: 'Five plus zero equals five. Nine plus zero equals nine. Adding zero keeps the number the same!', file: 'plus-zero-rule-part3.mp3' },
+    
+    // Step-specific instructions
+    { text: 'Let\'s read the facts together!', file: 'read-together-intro.mp3' },
+    { text: 'Your turn! Read the fact out loud.', file: 'your-turn-read-it.mp3' },
+    { text: 'Great job reading!', file: 'great-job-reading.mp3' },
+    { text: 'Read the fact and type the answer.', file: 'read-fact-answer.mp3' },
+    { text: 'Type the answer for each fact.', file: 'type-answer-for-each-fact.mp3' },
+    
+    // Fact families specific
+    { text: 'These facts are a fact family. They have the same sum!', file: 'fact-family-intro.mp3' },
+    { text: 'Now say the turnaround.', file: 'say-turnaround.mp3' },
+    { text: 'Now complete the turnaround.', file: 'complete-turnaround.mp3' },
+    { text: 'What\'s its turnaround?', file: 'whats-turnaround.mp3' },
+    { text: 'Remember, turnarounds have the same sum!', file: 'turnaround-reminder.mp3' },
+    
+    // Rule introductions (legacy names)
+    { text: 'When you add one, you get the next counting number!', file: 'rule-plus-one.mp3' },
+    { text: 'When you add zero, the number stays the same!', file: 'rule-plus-zero.mp3' },
   ];
   
   for (const phrase of phrases) {
@@ -243,17 +275,17 @@ async function generateInstructionalAudio() {
  * Main generation function
  */
 async function main() {
-  console.log(`🎙️  Audio Generation Script`);
-  console.log(`Provider: ${PROVIDER}`);
-  console.log(`Voice: ${VOICE}`);
-  console.log(`Output: ${AUDIO_DIR}\n`);
-  
   // Create subdirectories
   mkdirSync(join(AUDIO_DIR, 'instructions'), { recursive: true });
   
   try {
     // Generate instructional phrases
     await generateInstructionalAudio();
+    
+    if (INSTRUCTIONS_ONLY) {
+      console.log(`\n✅ Instructions complete!`);
+      return;
+    }
     
     // Generate audio for all facts
     console.log('\n🔢 Generating fact audio...');
