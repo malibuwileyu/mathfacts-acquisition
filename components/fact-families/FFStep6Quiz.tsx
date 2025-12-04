@@ -232,25 +232,30 @@ export default function FFStep6Quiz({ lesson, onComplete }: Props) {
             {/* Show different display for each question type */}
             {currentQuestion.type === 'sum' ? (
               <div className="flex items-center justify-center gap-3">
+                {/* Left placeholder for alignment */}
+                <span className="text-4xl invisible" aria-hidden="true">✓</span>
                 <span className={`text-5xl font-bold ${
                   showFeedback && isCorrect ? 'text-green-800' : 
                   showFeedback && !isCorrect ? 'text-red-800' : 'text-green-600'
                 }`}>
                   {currentFact.operand1} + {currentFact.operand2} = {showFeedback ? currentFact.result : (answer || '?')}
                 </span>
-                {showFeedback && (
-                  <span className={`text-4xl ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-                    {isCorrect ? '✓' : '✗'}
-                  </span>
-                )}
+                {/* Right checkmark - always present, visible only when showing feedback */}
+                <span className={`text-4xl ${showFeedback ? '' : 'invisible'} ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                  {isCorrect ? '✓' : '✗'}
+                </span>
               </div>
             ) : (
               <>
-                <div className="text-3xl font-bold font-mono text-teal-600 mb-2">
-                  {currentFact.operand1} + {currentFact.operand2} = {currentFact.result}
+                <div className="flex items-center justify-center gap-2 text-3xl font-bold font-mono text-teal-600 mb-2">
+                  <span className="invisible" aria-hidden="true">✓</span>
+                  <span>{currentFact.operand1} + {currentFact.operand2} = {currentFact.result}</span>
+                  <span className="invisible" aria-hidden="true">✓</span>
                 </div>
                 <p className="text-sm text-gray-600 mb-2">Turnaround?</p>
                 <div className="flex items-center justify-center gap-2">
+                  {/* Left placeholder for alignment */}
+                  <span className="text-3xl invisible" aria-hidden="true">✓</span>
                   <span className={`text-3xl font-bold font-mono ${
                     showFeedback && isCorrect ? 'text-green-800' : 
                     showFeedback && !isCorrect ? 'text-red-800' : 'text-gray-800'
@@ -264,11 +269,10 @@ export default function FFStep6Quiz({ lesson, onComplete }: Props) {
                           : `${answer1 || '_'} + ${answer2 || '_'} = ?`
                     }
                   </span>
-                  {showFeedback && (
-                    <span className={`text-3xl ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-                      {isCorrect ? '✓' : '✗'}
-                    </span>
-                  )}
+                  {/* Right checkmark - always present, visible only when showing feedback */}
+                  <span className={`text-3xl ${showFeedback ? '' : 'invisible'} ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                    {isCorrect ? '✓' : '✗'}
+                  </span>
                 </div>
                 {showFeedback && !isCorrect && (
                   <div className="text-sm text-red-700 mt-2">
