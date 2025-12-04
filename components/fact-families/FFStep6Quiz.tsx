@@ -38,6 +38,7 @@ export default function FFStep6Quiz({ lesson, onComplete }: Props) {
   const [answers, setAnswers] = useState<QuizAnswer[]>([]);
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
+  const [audioReady, setAudioReady] = useState(false);
   const { playAudio } = useAudio();
 
   // Build quiz: ALL turnaround questions
@@ -74,19 +75,22 @@ export default function FFStep6Quiz({ lesson, onComplete }: Props) {
 
   useEffect(() => {
     if (!currentQuestion) return;
+    setAudioReady(false);
+    
     if (currentQuestion.type === 'sum') {
       playAudio(getFactAudio(currentFact.id, 'question'));
+      setAudioReady(true);
     } else {
       // Turnaround question - wait for initial instruction to finish
       const delay = currentQuestionIndex === 0 ? 2500 : 0;
-      setTimeout(() => {
-        playAudio(getFactAudio(currentFact.id, 'statement'));
-        setTimeout(() => {
-          playAudio({
-            filename: 'instructions/whats-turnaround.mp3',
-            text: "What's its turnaround?"
-          });
-        }, 2000);
+      setTimeout(async () => {
+        await playAudio(getFactAudio(currentFact.id, 'statement'));
+        await new Promise(r => setTimeout(r, 500));
+        await playAudio({
+          filename: 'instructions/whats-turnaround.mp3',
+          text: "What's its turnaround?"
+        });
+        setAudioReady(true);
       }, delay);
     }
   }, [currentQuestionIndex]);
@@ -283,10 +287,11 @@ export default function FFStep6Quiz({ lesson, onComplete }: Props) {
             )}
           </div>
 
-          {/* Number pad - always visible, no display */}
+          {/* Number pad - blocked until audio finishes */}
               <NumberPad 
               value={currentQuestion.type === 'sum' ? answer : (operandsConfirmed ? sumAnswer : '')}
               hideDisplay
+              disabled={!audioReady || showFeedback}
                 onChange={(val) => {
                   if (currentQuestion.type === 'sum') {
                     setAnswer(val);
